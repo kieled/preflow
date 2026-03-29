@@ -110,9 +110,23 @@ export function useChat(options: UseChatOptions): UseChatResult {
 		}
 	}, [flow]);
 
+	const pendingScrollRef = useRef<number | null>(null);
+
+	useEffect(() => {
+		if (pendingScrollRef.current !== null && containerElRef.current) {
+			containerElRef.current.scrollTop = pendingScrollRef.current;
+			pendingScrollRef.current = null;
+		}
+	});
+
 	const append = useCallback(
 		(appendCount: number) => {
+			const el = containerElRef.current;
+			const wasAtBottom = el !== null && el.scrollTop >= el.scrollHeight - el.clientHeight - 1;
 			flow.append(appendCount);
+			if (wasAtBottom) {
+				pendingScrollRef.current = flow.scrollToEnd();
+			}
 			rerender((c) => c + 1);
 		},
 		[flow],

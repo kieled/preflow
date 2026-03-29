@@ -89,8 +89,15 @@ export function useChat(options: UseChatOptions): UseChatReturn {
 	}
 
 	function append(appendCount: number) {
+		const el = containerRef.value;
+		const wasAtBottom = el !== null && el.scrollTop >= el.scrollHeight - el.clientHeight - 1;
 		chat.append(appendCount);
 		updateItems();
+		if (wasAtBottom && el) {
+			requestAnimationFrame(() => {
+				el.scrollTop = el.scrollHeight;
+			});
+		}
 	}
 
 	function prepend(prependCount: number): ScrollCorrection {
