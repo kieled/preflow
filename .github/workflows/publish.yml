@@ -31,24 +31,22 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
-      # Uses Trusted Publishing (OIDC) — no NPM_TOKEN secret needed.
-      # GitHub Actions proves its identity to npm via OIDC token.
-      #
-      # One-time setup on npmjs.com for each package:
-      #   Package Settings → Trusted Publishing → Add Trusted Publisher
-      #     Repository owner: <your-github-username>
-      #     Repository: preflow
-      #     Workflow filename: publish.yml
-      #     Environment: (leave empty)
-
       - name: Publish @preflow/core
         run: cd packages/core && npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @preflow/prose
         run: cd packages/prose && npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @preflow/react
         run: cd packages/react && npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @preflow/vue
         run: cd packages/vue && npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
