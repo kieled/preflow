@@ -41,6 +41,7 @@ export function ComponentsExample() {
 					justifyContent: "space-between",
 					padding: "0 16px",
 					backgroundColor: seededColor(item.index),
+					color: "rgba(0,0,0,0.8)",
 					fontSize: 13,
 				}}
 			>
@@ -60,6 +61,7 @@ export function ComponentsExample() {
 				style={{
 					height: "100%",
 					backgroundColor: seededColor(item.index),
+					color: "rgba(0,0,0,0.8)",
 				}}
 			>
 				#{item.index}
