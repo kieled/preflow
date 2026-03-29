@@ -1,5 +1,10 @@
 import { useChat } from "@preflow/react";
-import { useState, useCallback, useRef } from "react";
+import { prepareText, measureHeight } from "@preflow/core";
+import type { PreparedText } from "@chenglou/pretext";
+import { useCallback, useRef, useState } from "react";
+
+const CHAT_FONT = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+const CHAT_LINE_HEIGHT = 21;
 
 const sampleTexts = [
 	"Hey!",
@@ -18,37 +23,46 @@ const sampleTexts = [
 
 interface Message {
 	text: string;
+	prepared: PreparedText;
 	sender: "me" | "them";
 }
 
-// Height must match what CSS actually renders.
-// Wrapper: padding 8px (4+4) vertical.
-// .chat-message: padding 20px (10+10), font 14px * line-height 1.5 = 21px/line.
-// Index label: ~14px (font 10px + 2px margin).
-// Max-width: 70% of container. Assume ~500px effective width for text.
-// ~8px per char at 14px font => ~62 chars/line.
-function msgHeight(text: string): number {
-	const charsPerLine = 50;
-	const lineH = 21;
-	const lines = Math.ceil(text.length / charsPerLine) || 1;
+function createMessage(text: string, sender: "me" | "them"): Message {
+	return { text, prepared: prepareText(text, CHAT_FONT), sender };
+}
+
+// Height uses pretext for text measurement — no guessing chars per line.
+// .chat-message: padding 20px (10+10), line-height 21px
+// Index label: ~14px. Wrapper padding: 12px.
+function msgHeight(msg: Message, containerWidth: number): number {
+	// chat-message max-width: 70% of container, minus horizontal padding (16+16 wrapper, 14+14 msg)
+	const maxTextWidth = containerWidth * 0.7 - 28;
+	const { height: textH } = measureHeight(msg.prepared, maxTextWidth, CHAT_LINE_HEIGHT);
 	const indexLabel = 14;
 	const msgPadding = 20;
 	const wrapperPadding = 12;
-	return wrapperPadding + msgPadding + indexLabel + lines * lineH;
+	return wrapperPadding + msgPadding + indexLabel + textH;
 }
 
 export function ChatExample() {
 	const messagesRef = useRef<Message[]>(
-		Array.from({ length: 50 }, (_, i) => ({
-			text: sampleTexts[i % sampleTexts.length]!,
-			sender: (i % 3 === 0 ? "them" : "me") as "me" | "them",
-		})),
+		Array.from({ length: 50 }, (_, i) =>
+			createMessage(
+				sampleTexts[i % sampleTexts.length]!,
+				(i % 3 === 0 ? "them" : "me") as "me" | "them",
+			),
+		),
 	);
 	const [messageCount, setMessageCount] = useState(messagesRef.current.length);
 	const [isAtBottom, setIsAtBottom] = useState(true);
+	const scrollAreaRef = useRef<HTMLElement | null>(null);
+	const widthRef = useRef(600);
 
 	const getHeight = useCallback(
-		(i: number) => msgHeight(messagesRef.current[i]?.text ?? ""),
+		(i: number) => {
+			const msg = messagesRef.current[i];
+			return msg ? msgHeight(msg, widthRef.current) : 60;
+		},
 		[],
 	);
 
@@ -58,8 +72,6 @@ export function ChatExample() {
 			getHeight,
 			overscan: 5,
 		});
-
-	const scrollAreaRef = useRef<HTMLElement | null>(null);
 
 	const handleScroll = useCallback(() => {
 		const el = scrollAreaRef.current;
@@ -72,6 +84,7 @@ export function ChatExample() {
 	const combinedRef = useCallback(
 		(el: HTMLElement | null) => {
 			scrollAreaRef.current = el;
+			if (el) widthRef.current = el.clientWidth;
 			containerRef(el);
 		},
 		[containerRef],
@@ -80,8 +93,7 @@ export function ChatExample() {
 	const handleSend = useCallback(() => {
 		const text =
 			sampleTexts[Math.floor(Math.random() * sampleTexts.length)]!;
-		// Update ref BEFORE append so getHeight sees the new message
-		messagesRef.current = [...messagesRef.current, { text, sender: "me" }];
+		messagesRef.current = [...messagesRef.current, createMessage(text, "me")];
 		setMessageCount(messagesRef.current.length);
 		append(1);
 	}, [append]);
@@ -91,18 +103,19 @@ export function ChatExample() {
 			sampleTexts[Math.floor(Math.random() * sampleTexts.length)]!;
 		messagesRef.current = [
 			...messagesRef.current,
-			{ text, sender: "them" },
+			createMessage(text, "them"),
 		];
 		setMessageCount(messagesRef.current.length);
 		append(1);
 	}, [append]);
 
 	const handleLoadOlder = useCallback(() => {
-		const older = Array.from({ length: 20 }, (_, i) => ({
-			text: sampleTexts[(i + 5) % sampleTexts.length]!,
-			sender: (i % 2 === 0 ? "them" : "me") as "me" | "them",
-		}));
-		// Update ref BEFORE prepend so getHeight sees the new messages
+		const older = Array.from({ length: 20 }, (_, i) =>
+			createMessage(
+				sampleTexts[(i + 5) % sampleTexts.length]!,
+				(i % 2 === 0 ? "them" : "me") as "me" | "them",
+			),
+		);
 		messagesRef.current = [...older, ...messagesRef.current];
 		setMessageCount(messagesRef.current.length);
 		prepend(20);
@@ -113,8 +126,9 @@ export function ChatExample() {
 			<div className="example-controls">
 				<h3>Chat</h3>
 				<p>
-					Bottom-anchored messaging with append (new messages) and
-					prepend (load older). Auto-follows when at bottom.
+					Bottom-anchored messaging with pretext-based height
+					measurement. append (new messages) and prepend (load older)
+					with auto-follow when at bottom.
 				</p>
 				<div className="example-actions">
 					<button onClick={handleSend}>Send Message</button>

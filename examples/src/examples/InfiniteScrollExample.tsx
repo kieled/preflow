@@ -1,15 +1,19 @@
-import { createFlow } from "@preflow/core";
+import { createFlow, prepareText, measureHeight } from "@preflow/core";
 import type { FlowItem } from "@preflow/core";
+import type { PreparedText } from "@chenglou/pretext";
 import { useState, useRef, useCallback, useEffect } from "react";
+
+const BODY_FONT = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+const BODY_LINE_HEIGHT = 20;
 
 // Simulate a feed with pages of items
 interface FeedItem {
 	id: number;
 	title: string;
 	body: string;
+	prepared: PreparedText;
 	author: string;
 	likes: number;
-	height: number;
 }
 
 const adjectives = [
@@ -37,17 +41,21 @@ function generateItem(id: number): FeedItem {
 	const adj = adjectives[((id * 7) + 3) % adjectives.length]!;
 	const noun = nouns[((id * 13) + 7) % nouns.length]!;
 	const body = bodies[id % bodies.length]!;
-	const lines = Math.ceil(body.length / 60) || 1;
-	// Header: 44px, body: lines*20px, footer: 32px, padding: 32px, gaps: 16px
-	const height = 44 + lines * 20 + 32 + 32 + 16;
 	return {
 		id,
 		title: `${adj} ${noun} #${id}`,
 		body,
+		prepared: prepareText(body, BODY_FONT),
 		author: `user_${(id * 31) % 100}`,
 		likes: (id * 7919) % 500,
-		height,
 	};
+}
+
+function itemHeight(item: FeedItem, containerWidth: number): number {
+	const textWidth = containerWidth - 32; // padding 16+16
+	const { height: bodyH } = measureHeight(item.prepared, textWidth, BODY_LINE_HEIGHT);
+	// Header: 44px, body: bodyH, footer: 32px, padding: 32px, gaps: 16px
+	return 44 + bodyH + 32 + 32 + 16;
 }
 
 function seededColor(id: number): string {
@@ -70,6 +78,7 @@ export function InfiniteScrollExample() {
 
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const flowRef = useRef<ReturnType<typeof createFlow> | null>(null);
+	const widthRef = useRef(800);
 	const [visibleItems, setVisibleItems] = useState<FlowItem[]>([]);
 	const [totalHeight, setTotalHeight] = useState(0);
 
@@ -77,7 +86,10 @@ export function InfiniteScrollExample() {
 	useEffect(() => {
 		flowRef.current = createFlow({
 			count: items.length,
-			getHeight: (i) => itemsRef.current[i]?.height ?? 80,
+			getHeight: (i) => {
+				const item = itemsRef.current[i];
+				return item ? itemHeight(item, widthRef.current) : 100;
+			},
 			overscan: 5,
 		});
 		const el = containerRef.current;

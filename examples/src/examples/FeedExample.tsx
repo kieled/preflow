@@ -1,4 +1,6 @@
 import { useFlow } from "@preflow/react";
+import { prepareText, measureHeight } from "@preflow/core";
+import type { PreparedText } from "@chenglou/pretext";
 import { useState, useCallback, useRef, useEffect } from "react";
 
 interface Post {
@@ -7,6 +9,7 @@ interface Post {
 	handle: string;
 	avatar: string;
 	text: string;
+	prepared: PreparedText;
 	hasImage: boolean;
 	imageHeight: number;
 	imageHue: number;
@@ -57,6 +60,10 @@ const times = [
 	"8h", "12h", "16h", "1d", "2d", "3d", "5d", "1w", "2w",
 ];
 
+// Text height via @chenglou/pretext — pure arithmetic, no DOM, no canvas.
+// prepare() once per text+font, layout() returns {lineCount, height} in ~0.0002ms.
+const TWEET_FONT = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+
 function generatePost(id: number): Post {
 	const authorIdx = (id * 7 + 3) % authors.length;
 	const author = authors[authorIdx]!;
@@ -71,6 +78,7 @@ function generatePost(id: number): Post {
 		handle: author.handle,
 		avatar: `hsl(${(id * 97 + 30) % 360}, 65%, 55%)`,
 		text,
+		prepared: prepareText(text, TWEET_FONT),
 		hasImage,
 		imageHeight,
 		imageHue,
@@ -83,37 +91,11 @@ function generatePost(id: number): Post {
 	};
 }
 
-// All CSS uses deterministic px values (no relative line-heights):
-//   .tweet padding: 16px top + 12px bottom = 28px
-//   .tweet-header: height 40px + margin-bottom 8px = 48px
-//   .tweet-text: line-height 20px (exact), overflow hidden
-//   .tweet-image: explicit height + margin-top 12px
-//   .tweet-footer: height 24px + padding-top 8px (content-box) = 32px
-//   .tweet border-bottom: 1px
-//
-// Total = 28 + 48 + textH + imgH + 32 + 1 = 109 + textH + imgH
-//
-// textH = textLines * 20
-// textLines depends on container width → measured via canvas for exact char widths
-
-// Shared canvas for text measurement (much faster than DOM)
-let measureCanvas: CanvasRenderingContext2D | null = null;
-function getTextWidth(text: string): number {
-	if (!measureCanvas) {
-		const c = document.createElement("canvas");
-		measureCanvas = c.getContext("2d")!;
-		// Must match .tweet-text CSS exactly
-		measureCanvas.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
-	}
-	return measureCanvas.measureText(text).width;
-}
+const TWEET_LINE_HEIGHT = 20;
 
 function postHeight(post: Post, contentWidth: number): number {
-	// Exact text width via canvas — no guessing chars-per-line
 	const textAvailWidth = contentWidth - 32; // .tweet horizontal padding: 16+16
-	const fullTextWidth = getTextWidth(post.text);
-	const textLines = Math.max(1, Math.ceil(fullTextWidth / textAvailWidth));
-	const textH = textLines * 20; // line-height: 20px (exact px in CSS)
+	const { height: textH } = measureHeight(post.prepared, textAvailWidth, TWEET_LINE_HEIGHT);
 	const imgH = post.hasImage ? post.imageHeight + 12 : 0;
 	// 28 (padding) + 48 (header) + textH + imgH + 32 (footer) + 1 (border)
 	return 109 + textH + imgH;
@@ -207,9 +189,9 @@ export function FeedExample() {
 			<div className="example-controls">
 				<h3>Social Feed</h3>
 				<p>
-					Heights calculated with canvas.measureText for exact text
-					width + deterministic px CSS. No DOM measurement, no
-					guessing chars-per-line. Works at any resolution.
+					Heights calculated via @chenglou/pretext — pure arithmetic
+					text measurement (~0.0002ms per layout). No DOM, no canvas.
+					prepare() once per text, measureHeight() at any width.
 				</p>
 				<div className="example-actions">
 					<button onClick={() => scrollToIndex(0)}>
