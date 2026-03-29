@@ -10,15 +10,23 @@ function seededColor(index: number): string {
 	return `hsl(${hue}, 60%, 78%)`;
 }
 
+function computeGridLayout(containerWidth: number, minColWidth: number, gap: number) {
+	const columns = Math.max(1, Math.floor((containerWidth + gap) / (minColWidth + gap)));
+	const columnWidth = (containerWidth - gap * (columns - 1)) / columns;
+	return { columns, columnWidth };
+}
+
 export function GridExample() {
 	const [count, setCount] = useState(200);
-	const [columns, setColumns] = useState(3);
+	const [minColWidth, setMinColWidth] = useState(200);
 	const [gap, setGap] = useState(8);
 	const [overscan, setOverscan] = useState(3);
 	const [loading, setLoading] = useState(false);
 	const [infiniteScroll, setInfiniteScroll] = useState(true);
-	const columnWidth = 200;
+	const [containerWidth, setContainerWidth] = useState(800);
 	const scrollRef = useRef<HTMLElement | null>(null);
+
+	const { columns, columnWidth } = computeGridLayout(containerWidth, minColWidth, gap);
 
 	const getHeight = useCallback((i: number) => seededHeight(i), []);
 
@@ -35,10 +43,24 @@ export function GridExample() {
 	const combinedRef = useCallback(
 		(el: HTMLElement | null) => {
 			scrollRef.current = el;
+			if (el) setContainerWidth(el.clientWidth);
 			containerRef(el);
 		},
 		[containerRef],
 	);
+
+	// Track width changes
+	useEffect(() => {
+		const el = scrollRef.current;
+		if (!el) return;
+		const observer = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				setContainerWidth(entry.contentRect.width);
+			}
+		});
+		observer.observe(el);
+		return () => observer.disconnect();
+	}, []);
 
 	// Infinite scroll
 	const handleScroll = useCallback(() => {
@@ -68,8 +90,9 @@ export function GridExample() {
 			<div className="example-controls">
 				<h3>Grid</h3>
 				<p>
-					Fixed-column grid where each row is sized by its tallest
-					cell. Scroll down to auto-load more items.
+					Auto-columns grid with a minimum column width. Columns and
+					widths adjust dynamically to fill the container, like CSS{" "}
+					<code>repeat(auto-fill, minmax(...))</code>.
 				</p>
 				<label>
 					Items:{" "}
@@ -83,15 +106,15 @@ export function GridExample() {
 					<span>{count.toLocaleString()}</span>
 				</label>
 				<label>
-					Columns:{" "}
+					Min column width:{" "}
 					<input
 						type="range"
-						min={1}
-						max={6}
-						value={columns}
-						onChange={(e) => setColumns(+e.target.value)}
+						min={80}
+						max={400}
+						value={minColWidth}
+						onChange={(e) => setMinColWidth(+e.target.value)}
 					/>
-					<span>{columns}</span>
+					<span>{minColWidth}px</span>
 				</label>
 				<label>
 					Gap:{" "}
@@ -159,8 +182,16 @@ export function GridExample() {
 						</span>
 					</div>
 					<div>
-						<span>Rows</span>
-						<span>{Math.ceil(count / columns)}</span>
+						<span>Columns</span>
+						<span>{columns}</span>
+					</div>
+					<div>
+						<span>Column width</span>
+						<span>{Math.round(columnWidth)}px</span>
+					</div>
+					<div>
+						<span>Container</span>
+						<span>{Math.round(containerWidth)}px</span>
 					</div>
 					<div>
 						<span>Total items</span>
@@ -204,7 +235,7 @@ export function GridExample() {
 										marginTop: 2,
 									}}
 								>
-									{item.width}x{item.height}
+									{Math.round(item.width)}x{item.height}
 								</div>
 							</div>
 						</div>
