@@ -6,6 +6,10 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -25,11 +29,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
 
-      - name: Configure npm auth
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-          npm whoami
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@latest
 
       - name: Publish changed packages
         run: |
@@ -43,7 +46,7 @@ jobs:
               echo "skip $name@$local_ver already published"
             else
               echo "publishing $name@$local_ver (npm has $npm_ver)"
-              cd "$dir" && npm publish --access public && cd -
+              cd "$dir" && npm publish --provenance --access public && cd -
             fi
           }
 
