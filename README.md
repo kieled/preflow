@@ -1,5 +1,12 @@
 # Preflow
 
+[![npm @preflow/core](https://img.shields.io/npm/v/@preflow/core?label=%40preflow%2Fcore)](https://www.npmjs.com/package/@preflow/core)
+[![npm @preflow/react](https://img.shields.io/npm/v/@preflow/react?label=%40preflow%2Freact)](https://www.npmjs.com/package/@preflow/react)
+[![npm @preflow/vue](https://img.shields.io/npm/v/@preflow/vue?label=%40preflow%2Fvue)](https://www.npmjs.com/package/@preflow/vue)
+[![npm @preflow/prose](https://img.shields.io/npm/v/@preflow/prose?label=%40preflow%2Fprose)](https://www.npmjs.com/package/@preflow/prose)
+[![CI](https://github.com/kieled/preflow/actions/workflows/ci.yml/badge.svg)](https://github.com/kieled/preflow/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > **Early Testing Phase** — This library is under active development. APIs may change between releases. Not recommended for production use yet.
 
 Predictive virtualization engine -- heights from arithmetic, not DOM measurement.
