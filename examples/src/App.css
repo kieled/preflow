@@ -195,6 +195,7 @@ body {
 	padding: 0 16px;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 	font-size: 13px;
+	color: rgba(0, 0, 0, 0.8);
 }
 
 .item-index {
@@ -216,6 +217,7 @@ body {
 	border-radius: 4px;
 	font-size: 13px;
 	font-weight: 500;
+	color: rgba(0, 0, 0, 0.8);
 }
 
 /* Masonry cards */
