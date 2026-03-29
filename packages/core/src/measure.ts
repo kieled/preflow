@@ -1,6 +1,8 @@
 import { prepare, layout } from "@chenglou/pretext";
 import type { PreparedText, LayoutResult } from "@chenglou/pretext";
 
+export type { PreparedText, LayoutResult } from "@chenglou/pretext";
+
 /**
  * Prepare text for measurement. Call once per text+font pair.
  * The result is reusable — call `measureHeight` many times with different widths.

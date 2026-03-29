@@ -15,6 +15,7 @@
     "examples": {
       "name": "@preflow/examples",
       "dependencies": {
+        "@chenglou/pretext": "^0.0.3",
         "@preflow/core": "workspace:*",
         "@preflow/prose": "workspace:*",
         "@preflow/react": "workspace:*",
@@ -31,10 +32,13 @@
     },
     "packages/core": {
       "name": "@preflow/core",
-      "version": "0.0.1",
-      "dependencies": {
+      "version": "0.0.2",
+      "peerDependencies": {
         "@chenglou/pretext": "^0.0.3",
       },
+      "optionalPeers": [
+        "@chenglou/pretext",
+      ],
     },
     "packages/prose": {
       "name": "@preflow/prose",

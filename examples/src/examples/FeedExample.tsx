@@ -1,6 +1,6 @@
 import { useFlow } from "@preflow/react";
-import { prepareText, measureHeight } from "@preflow/core";
-import type { PreparedText } from "@chenglou/pretext";
+import { prepareText, measureHeight } from "@preflow/core/measure";
+import type { PreparedText } from "@preflow/core/measure";
 import { useState, useCallback, useRef, useEffect } from "react";
 
 interface Post {

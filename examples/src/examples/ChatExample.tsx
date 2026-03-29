@@ -1,6 +1,6 @@
 import { useChat } from "@preflow/react";
-import { prepareText, measureHeight } from "@preflow/core";
-import type { PreparedText } from "@chenglou/pretext";
+import { prepareText, measureHeight } from "@preflow/core/measure";
+import type { PreparedText } from "@preflow/core/measure";
 import { useCallback, useRef, useState } from "react";
 
 const CHAT_FONT = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';

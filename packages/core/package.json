@@ -1,6 +1,6 @@
 {
 	"name": "@preflow/core",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "Predictive virtualization engine — heights from arithmetic, not DOM measurement",
 	"type": "module",
 	"main": "dist/index.js",
@@ -9,6 +9,10 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
+		},
+		"./measure": {
+			"types": "./dist/measure.d.ts",
+			"import": "./dist/measure.js"
 		}
 	},
 	"files": ["dist"],
@@ -22,7 +26,12 @@
 		"format": "biome format --write src tests"
 	},
 	"license": "MIT",
-	"dependencies": {
+	"peerDependencies": {
 		"@chenglou/pretext": "^0.0.3"
+	},
+	"peerDependenciesMeta": {
+		"@chenglou/pretext": {
+			"optional": true
+		}
 	}
 }

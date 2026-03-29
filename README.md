@@ -76,10 +76,13 @@ Preflow wins **11 of 12** benchmarks. The sole loss — `scrollToIndex` at 1.5x 
 
 | Package | Description | Min | Gzip |
 |---|---|---|---|
-| `@preflow/core` | Headless virtualization engine | 5.6 KB | 2.1 KB |
+| `@preflow/core` | Headless virtualization engine (zero deps) | 6.7 KB | 2.1 KB |
+| `@preflow/core/measure` | Arithmetic text measurement (requires `@chenglou/pretext`) | +0.2 KB | +0.1 KB |
 | `@preflow/react` | React 19 hooks + components | 10.6 KB | 2.5 KB |
 | `@preflow/vue` | Vue 3 composables + components | 8.9 KB | 1.5 KB |
 | `@preflow/prose` | Line-level prose virtualization | 3.5 KB | 1.5 KB |
+
+> `@preflow/core` has zero dependencies. The `@preflow/core/measure` entry point provides arithmetic text measurement via [`@chenglou/pretext`](https://github.com/chenglou/pretext) — install it as an optional peer dependency only if you need text height prediction.
 
 ## Quick Start
 
@@ -89,30 +92,30 @@ Preflow wins **11 of 12** benchmarks. The sole loss — `scrollToIndex` at 1.5x 
 import { useFlow } from "@preflow/react";
 
 function MyList({ data }) {
-	const { containerRef, items, totalHeight } = useFlow({
-		count: data.length,
-		getHeight: (i) => calculateHeight(data[i]),
-	});
+  const { containerRef, items, totalHeight } = useFlow({
+    count: data.length,
+    getHeight: (i) => calculateHeight(data[i]),
+  });
 
-	return (
-		<div ref={containerRef} style={{ height: 400, overflow: "auto" }}>
-			<div style={{ height: totalHeight, position: "relative" }}>
-				{items.map((item) => (
-					<div
-						key={item.index}
-						style={{
-							position: "absolute",
-							top: item.y,
-							height: item.height,
-							width: "100%",
-						}}
-					>
-						{data[item.index].text}
-					</div>
-				))}
-			</div>
-		</div>
-	);
+  return (
+    <div ref={containerRef} style={{ height: 400, overflow: "auto" }}>
+      <div style={{ height: totalHeight, position: "relative" }}>
+        {items.map((item) => (
+          <div
+            key={item.index}
+            style={{
+              position: "absolute",
+              top: item.y,
+              height: item.height,
+              width: "100%",
+            }}
+          >
+            {data[item.index].text}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 ```
 
@@ -122,9 +125,9 @@ function MyList({ data }) {
 import { createFlow } from "@preflow/core";
 
 const flow = createFlow({
-	count: 100_000,
-	getHeight: (i) => heights[i],
-	overscan: 5,
+  count: 100_000,
+  getHeight: (i) => heights[i],
+  overscan: 5,
 });
 
 flow.setViewport(scrollTop, viewportHeight);
@@ -136,9 +139,9 @@ const visibleItems = flow.getItems();
 
 ```tsx
 const { containerRef, items, totalHeight } = useFlow({
-	count: 1000,
-	getHeight: (i) => heights[i],
-	windowScroll: true,
+  count: 1000,
+  getHeight: (i) => heights[i],
+  windowScroll: true,
 });
 ```
 
@@ -150,9 +153,9 @@ Variable-height items in a single column. Supports prepend with scroll correctio
 
 ```typescript
 const flow = createFlow({
-	count: 10_000,
-	getHeight: (i) => heights[i],
-	overscan: 5,
+  count: 10_000,
+  getHeight: (i) => heights[i],
+  overscan: 5,
 });
 ```
 
@@ -162,11 +165,11 @@ Fixed-column grid where each row height equals the tallest cell in that row.
 
 ```typescript
 const grid = createGrid({
-	count: 10_000,
-	columns: 4,
-	columnWidth: 200,
-	gap: 8,
-	getHeight: (i) => heights[i],
+  count: 10_000,
+  columns: 4,
+  columnWidth: 200,
+  gap: 8,
+  getHeight: (i) => heights[i],
 });
 ```
 
@@ -176,11 +179,11 @@ Pinterest-style shortest-column greedy placement.
 
 ```typescript
 const masonry = createMasonry({
-	count: 10_000,
-	columns: 3,
-	columnWidth: 250,
-	gap: 12,
-	getHeight: (i) => heights[i],
+  count: 10_000,
+  columns: 3,
+  columnWidth: 250,
+  gap: 12,
+  getHeight: (i) => heights[i],
 });
 ```
 
@@ -190,9 +193,9 @@ Bottom-anchored messaging virtualizer. Auto-follows when at bottom, preserves po
 
 ```typescript
 const chat = createChat({
-	count: messages.length,
-	getHeight: (i) => messageHeights[i],
-	overscan: 5,
+  count: messages.length,
+  getHeight: (i) => messageHeights[i],
+  overscan: 5,
 });
 ```
 
@@ -202,22 +205,22 @@ All layout modes return the same `Flow` interface:
 
 ```typescript
 interface Flow {
-	readonly totalHeight: number;
-	readonly visibleRange: { start: number; end: number };
+  readonly totalHeight: number;
+  readonly visibleRange: { start: number; end: number };
 
-	getItems(): FlowItem[];
-	getItemOffset(index: number): number;
-	getItemHeight(index: number): number;
+  getItems(): FlowItem[];
+  getItemOffset(index: number): number;
+  getItemHeight(index: number): number;
 
-	setViewport(scrollTop: number, viewportHeight: number): boolean;
-	setContainerWidth(width: number): void;
-	setCount(count: number): void;
+  setViewport(scrollTop: number, viewportHeight: number): boolean;
+  setContainerWidth(width: number): void;
+  setCount(count: number): void;
 
-	prepend(count: number): ScrollCorrection;
-	append(count: number): void;
+  prepend(count: number): ScrollCorrection;
+  append(count: number): void;
 
-	scrollToIndex(index: number, align?: "start" | "center" | "end"): number;
-	scrollToEnd(): number;
+  scrollToIndex(index: number, align?: "start" | "center" | "end"): number;
+  scrollToEnd(): number;
 }
 ```
 
