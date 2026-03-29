@@ -44,6 +44,8 @@ Preflow wins **11 of 12** core benchmarks. The sole loss — `scrollToIndex` at 
 | **Grid resize p95** | 2.9ms | 15.6ms | 1.2ms |
 | **Grid resize drops** | 0 | 16 | 0 |
 
+> Virtuoso's grid resize is fast because it uses CSS `flex-wrap` — the browser handles reflow natively with no JS grid calculation. The tradeoff: all items must be the same size (no variable row heights, no masonry). Preflow and TanStack compute layouts in JS to support variable heights and masonry.
+
 ### SSR (`renderToString`)
 
 > Source: `benchmarks/ssr.bench.tsx`
