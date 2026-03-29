@@ -2,7 +2,7 @@
  * Benchmark: @preflow/core vs @tanstack/virtual-core
  *
  * Both are framework-agnostic virtualizer cores.
- * react-virtuoso and react-window are React-only — no headless core to benchmark.
+ * react-virtuoso is React-only — no headless core to benchmark.
  */
 
 import { createFlow, createGrid, createMasonry, createChat } from "../packages/core/src/index";

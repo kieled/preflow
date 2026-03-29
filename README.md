@@ -34,43 +34,43 @@ Preflow wins **11 of 12** benchmarks. The sole loss — `scrollToIndex` at 1.5x 
 
 ## Feature Comparison
 
-|  | Preflow | TanStack Virtual | react-virtuoso | react-window |
-|---|---|---|---|---|
-| **Architecture** | | | | |
-| DOM-free core | Yes | No | No | No |
-| Height source | Predictive (arithmetic) | DOM measurement | DOM measurement | Fixed or DOM |
-| SSR / Node.js | Full | Partial | Partial | No |
-| Framework-agnostic core | Yes | Yes | No | No |
-| Bundle size (core, gzip) | 2.1 KB | 5.3 KB | 17 KB | 6.2 KB |
-| **Layout Modes** | | | | |
-| 1D list | Yes | Yes | Yes | Yes |
-| Grid | Yes | Partial (lanes) | Yes | Fixed only |
-| Masonry | Yes | No | No | No |
-| Chat (bottom-anchored) | Yes | No | Yes | No |
-| Line-level prose | Yes | No | No | No |
-| **Scrolling** | | | | |
-| Container scroll | Yes | Yes | Yes | Yes |
-| Window scroll | Yes | Yes | Yes | No |
-| Scroll correction (prepend) | Built-in | Manual | Built-in | No |
-| Auto-follow (chat) | Built-in | No | Built-in | No |
-| Bidirectional infinite scroll | Built-in | Manual | Built-in | No |
-| **Dynamic Data** | | | | |
-| Append items | O(k) incremental | O(n) rebuild | O(n) rebuild | Remount |
-| Prepend with correction | Built-in | Manual | Built-in | No |
-| Container resize reflow | `setContainerWidth` | `measureElement` | Automatic | Manual |
-| **Data Structures** | | | | |
-| Offset lookup | O(1) prefix-sum | O(n) cache walk | O(log n) tree | O(1) fixed only |
-| Scroll-to-index | O(log n) | O(log n) | O(log n) | O(1) fixed only |
-| Internal storage | `Float64Array` | JS objects | JS objects | JS objects |
-| **Framework Support** | | | | |
-| React | `@preflow/react` | `@tanstack/react-virtual` | Built-in | Built-in |
-| Vue | `@preflow/vue` | `@tanstack/vue-virtual` | No | No |
-| Svelte | Planned | `@tanstack/svelte-virtual` | No | No |
-| Solid | Planned | `@tanstack/solid-virtual` | No | No |
-| **API** | | | | |
-| Style | Functional (`createFlow`) | Class (`new Virtualizer`) | Component | Component |
-| Unified return type | Yes (all modes -> `Flow`) | No | No | No |
-| TypeScript | Full | Full | Full | `@types` |
+|  | Preflow | TanStack Virtual | react-virtuoso |
+|---|---|---|---|
+| **Architecture** | | | |
+| DOM-free core | Yes | No | No |
+| Height source | Predictive (arithmetic) | DOM measurement | DOM measurement |
+| SSR / Node.js | Full | Partial | Partial |
+| Framework-agnostic core | Yes | Yes | No |
+| Bundle size (core, gzip) | 2.1 KB | 5.3 KB | 17 KB |
+| **Layout Modes** | | | |
+| 1D list | Yes | Yes | Yes |
+| Grid | Yes | Partial (lanes) | Yes |
+| Masonry | Yes | No | No |
+| Chat (bottom-anchored) | Yes | No | Yes |
+| Line-level prose | Yes | No | No |
+| **Scrolling** | | | |
+| Container scroll | Yes | Yes | Yes |
+| Window scroll | Yes | Yes | Yes |
+| Scroll correction (prepend) | Built-in | Manual | Built-in |
+| Auto-follow (chat) | Built-in | No | Built-in |
+| Bidirectional infinite scroll | Built-in | Manual | Built-in |
+| **Dynamic Data** | | | |
+| Append items | O(k) incremental | O(n) rebuild | O(n) rebuild |
+| Prepend with correction | Built-in | Manual | Built-in |
+| Container resize reflow | `setContainerWidth` | `measureElement` | Automatic |
+| **Data Structures** | | | |
+| Offset lookup | O(1) prefix-sum | O(n) cache walk | O(log n) tree |
+| Scroll-to-index | O(log n) | O(log n) | O(log n) |
+| Internal storage | `Float64Array` | JS objects | JS objects |
+| **Framework Support** | | | |
+| React | `@preflow/react` | `@tanstack/react-virtual` | Built-in |
+| Vue | `@preflow/vue` | `@tanstack/vue-virtual` | No |
+| Svelte | Planned | `@tanstack/svelte-virtual` | No |
+| Solid | Planned | `@tanstack/solid-virtual` | No |
+| **API** | | | |
+| Style | Functional (`createFlow`) | Class (`new Virtualizer`) | Component |
+| Unified return type | Yes (all modes -> `Flow`) | No | No |
+| TypeScript | Full | Full | Full |
 
 ## Packages
 

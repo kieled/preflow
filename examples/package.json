@@ -11,6 +11,8 @@
 		"@preflow/react": "workspace:*",
 		"@preflow/prose": "workspace:*",
 		"@chenglou/pretext": "^0.0.3",
+		"@tanstack/react-virtual": "^3.13.23",
+		"react-virtuoso": "^4.18.3",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0"
 	},
