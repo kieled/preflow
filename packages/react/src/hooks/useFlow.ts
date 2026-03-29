@@ -134,8 +134,7 @@ export function useFlow(options: UseFlowOptions): UseFlowResult {
 			if (windowScroll) {
 				const el = containerElRef.current;
 				if (el) {
-					const elTop =
-						el.getBoundingClientRect().top + window.scrollY;
+					const elTop = el.getBoundingClientRect().top + window.scrollY;
 					window.scrollTo({ top: elTop + offset, behavior: "auto" });
 				}
 			} else if (containerElRef.current) {

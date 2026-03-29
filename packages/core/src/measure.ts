@@ -1,5 +1,5 @@
-import { prepare, layout } from "@chenglou/pretext";
-import type { PreparedText, LayoutResult } from "@chenglou/pretext";
+import { layout, prepare } from "@chenglou/pretext";
+import type { LayoutResult, PreparedText } from "@chenglou/pretext";
 
 export type { PreparedText, LayoutResult } from "@chenglou/pretext";
 
