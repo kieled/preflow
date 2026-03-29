@@ -28,16 +28,16 @@ export function useGrid(options: UseGridOptions): UseGridResult {
 	const getHeightRef = useRef(getHeight);
 	getHeightRef.current = getHeight;
 
-	// Recreate when grid config changes
-	const configRef = useRef({ columns, columnWidth, gap, overscan });
+	// Recreate only when structural config changes (columns, gap, overscan)
+	// columnWidth changes are handled cheaply via setContainerWidth (no row rebuild)
+	const configRef = useRef({ columns, gap, overscan });
 	const configChanged =
 		configRef.current.columns !== columns ||
-		configRef.current.columnWidth !== columnWidth ||
 		configRef.current.gap !== gap ||
 		configRef.current.overscan !== overscan;
 
 	if (flowRef.current === null || configChanged) {
-		configRef.current = { columns, columnWidth, gap, overscan };
+		configRef.current = { columns, gap, overscan };
 		flowRef.current = createGrid({
 			count,
 			columns,

@@ -9,7 +9,7 @@ import type { Flow, FlowItem, GridOptions, Range, ScrollCorrection } from "./typ
 export function createGrid(options: GridOptions): Flow {
 	let count = options.count;
 	const columns = options.columns;
-	const columnWidth = options.columnWidth;
+	let columnWidth = options.columnWidth;
 	const gap = options.gap ?? 0;
 	const getHeight = options.getHeight;
 	const overscan = options.overscan ?? 2;
@@ -126,7 +126,8 @@ export function createGrid(options: GridOptions): Flow {
 			return rangeStart !== oldStart || rangeEnd !== oldEnd;
 		},
 
-		setContainerWidth(_width: number): void {
+		setContainerWidth(width: number): void {
+			columnWidth = (width - gap * (columns - 1)) / columns;
 			build();
 			computeRange();
 		},

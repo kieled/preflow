@@ -37,15 +37,22 @@ function PreflowList() {
 // Preflow Grid
 // ---------------------------------------------------------------------------
 function PreflowGrid() {
-	const [w, setW] = useState(800);
 	const scrollRef = useRef<HTMLElement | null>(null);
-	const { cols, colW } = computeGrid(w);
+	const [cols, setCols] = useState(4);
+	const colW = scrollRef.current ? (scrollRef.current.clientWidth - GAP * (cols - 1)) / cols : MIN_COL;
 	const { containerRef, items, totalHeight } = useGrid({ count: COUNT, columns: cols, columnWidth: colW, gap: GAP, getHeight: heights, overscan: 3 });
-	const ref = useCallback((el: HTMLElement | null) => { scrollRef.current = el; if (el) setW(el.clientWidth); containerRef(el); }, [containerRef]);
+	const ref = useCallback((el: HTMLElement | null) => {
+		scrollRef.current = el;
+		if (el) setCols(computeGrid(el.clientWidth).cols);
+		containerRef(el);
+	}, [containerRef]);
 	useEffect(() => {
 		const el = scrollRef.current;
 		if (!el) return;
-		const ro = new ResizeObserver((e) => { setW(e[0]!.contentRect.width); });
+		const ro = new ResizeObserver((e) => {
+			const newCols = computeGrid(e[0]!.contentRect.width).cols;
+			setCols((prev) => prev !== newCols ? newCols : prev);
+		});
 		ro.observe(el);
 		return () => ro.disconnect();
 	}, []);
