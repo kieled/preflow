@@ -30,7 +30,28 @@ Predictive virtualization engine -- heights from arithmetic, not DOM measurement
 | Masonry layout (10K, 4 cols) | 2.8M ops/s | N/A | preflow only |
 | Chat prepend + scroll correction | 14.4K ops/s | N/A | preflow only |
 
-Preflow wins **11 of 12** benchmarks. The sole loss — `scrollToIndex` at 1.5x — is at raw memory access speed (~5ns/lookup) where V8's object property access is marginally faster than typed array indexing. In real-world usage (the "full pipeline" row), Preflow is **11.8x faster** end-to-end.
+Preflow wins **11 of 12** core benchmarks. The sole loss — `scrollToIndex` at 1.5x — is at raw memory access speed (~5ns/lookup) where V8's object property access is marginally faster than typed array indexing. In real-world usage (the "full pipeline" row), Preflow is **11.8x faster** end-to-end.
+
+### Browser (Playwright, vsync uncapped, 100K items)
+
+> Source: `benchmarks/browser.bench.ts`
+
+| Test | Preflow | TanStack Virtual | react-virtuoso |
+|---|---|---|---|
+| **Scroll FPS** | 1,748 | 1,332 | 58 |
+| **Scroll p95** | 0.9ms | 1.2ms | 17.9ms |
+| **Grid resize FPS** | 627 | 592 | 1,228 |
+| **Grid resize p95** | 2.9ms | 15.6ms | 1.2ms |
+| **Grid resize drops** | 0 | 16 | 0 |
+
+### SSR (`renderToString`)
+
+> Source: `benchmarks/ssr.bench.tsx`
+
+| Items | Preflow | TanStack Virtual | react-virtuoso |
+|---|---|---|---|
+| **1K** | 32.9K ops/s | 10.4K ops/s (3.2x slower) | 3.3K ops/s (10x slower) |
+| **10K** | 16.6K ops/s | 2.6K ops/s (6.5x slower) | 2.9K ops/s (5.7x slower) |
 
 ## Feature Comparison
 
