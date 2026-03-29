@@ -1,0 +1,36 @@
+{
+	"name": "@preflow/react",
+	"version": "0.0.1",
+	"description": "React components and hooks for preflow virtualization",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": ["dist"],
+	"sideEffects": false,
+	"repository": "https://github.com/kieled/preflow",
+	"keywords": ["virtualization", "virtual-scroll", "react", "hooks", "virtual-list"],
+	"scripts": {
+		"build": "tsc",
+		"test": "bun test",
+		"lint": "biome check src tests",
+		"format": "biome format --write src tests"
+	},
+	"dependencies": {
+		"@preflow/core": "workspace:*"
+	},
+	"peerDependencies": {
+		"react": "^19.2.4",
+		"react-dom": "^19.2.4"
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3"
+	}
+}

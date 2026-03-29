@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ES2022",
+		"moduleResolution": "bundler",
+		"jsx": "react-jsx",
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"skipLibCheck": true,
+		"paths": {
+			"@preflow/core": ["../packages/core/src"],
+			"@preflow/react": ["../packages/react/src"],
+			"@preflow/prose": ["../packages/prose/src"]
+		}
+	},
+	"include": ["src"]
+}

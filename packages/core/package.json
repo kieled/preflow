@@ -1,0 +1,25 @@
+{
+	"name": "@preflow/core",
+	"version": "0.0.1",
+	"description": "Predictive virtualization engine — heights from arithmetic, not DOM measurement",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": ["dist"],
+	"sideEffects": false,
+	"repository": "https://github.com/kieled/preflow",
+	"keywords": ["virtualization", "virtual-scroll", "virtual-list", "headless", "performance", "prefix-sum"],
+	"scripts": {
+		"build": "tsc",
+		"test": "bun test",
+		"lint": "biome check src tests",
+		"format": "biome format --write src tests"
+	},
+	"license": "MIT"
+}

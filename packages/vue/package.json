@@ -1,0 +1,31 @@
+{
+	"name": "@preflow/vue",
+	"version": "0.0.1",
+	"description": "Vue 3 composables and components for preflow virtualization",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": ["dist"],
+	"sideEffects": false,
+	"repository": "https://github.com/kieled/preflow",
+	"keywords": ["virtualization", "virtual-scroll", "vue", "vue3", "composables", "virtual-list"],
+	"scripts": {
+		"build": "tsc",
+		"test": "bun test",
+		"lint": "biome check src tests",
+		"format": "biome format --write src tests"
+	},
+	"dependencies": {
+		"@preflow/core": "workspace:*"
+	},
+	"peerDependencies": {
+		"vue": "^3.5.31"
+	},
+	"license": "MIT"
+}

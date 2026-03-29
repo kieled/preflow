@@ -1,0 +1,53 @@
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun test --recursive
+
+      - run: bun run build
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      # Uses Trusted Publishing (OIDC) — no NPM_TOKEN secret needed.
+      # GitHub Actions proves its identity to npm via OIDC token.
+      #
+      # One-time setup on npmjs.com for each package:
+      #   Package Settings → Trusted Publishing → Add Trusted Publisher
+      #     Repository owner: <your-github-username>
+      #     Repository: preflow
+      #     Workflow filename: publish.yml
+      #     Environment: (leave empty)
+
+      - name: Publish @preflow/core
+        run: cd packages/core && npm publish --provenance --access public
+
+      - name: Publish @preflow/prose
+        run: cd packages/prose && npm publish --provenance --access public
+
+      - name: Publish @preflow/react
+        run: cd packages/react && npm publish --provenance --access public
+
+      - name: Publish @preflow/vue
+        run: cd packages/vue && npm publish --provenance --access public

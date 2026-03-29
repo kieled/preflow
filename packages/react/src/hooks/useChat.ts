@@ -1,0 +1,142 @@
+import { createChat } from "@preflow/core";
+import type { FlowItem, ScrollCorrection } from "@preflow/core";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+export interface UseChatOptions {
+	count: number;
+	getHeight: (index: number) => number;
+	overscan?: number;
+}
+
+export interface UseChatResult {
+	containerRef: React.RefCallback<HTMLElement>;
+	items: FlowItem[];
+	totalHeight: number;
+	scrollToIndex: (index: number, align?: "start" | "center" | "end") => void;
+	scrollToEnd: () => void;
+	append: (count: number) => void;
+	prepend: (count: number) => ScrollCorrection;
+}
+
+export function useChat(options: UseChatOptions): UseChatResult {
+	const { count, getHeight, overscan } = options;
+	const [, rerender] = useState(0);
+	const flowRef = useRef<ReturnType<typeof createChat> | null>(null);
+	const containerElRef = useRef<HTMLElement | null>(null);
+	const cleanupRef = useRef<(() => void) | null>(null);
+	const getHeightRef = useRef(getHeight);
+	getHeightRef.current = getHeight;
+
+	const overscanRef = useRef(overscan);
+	if (flowRef.current === null || overscanRef.current !== overscan) {
+		overscanRef.current = overscan;
+		flowRef.current = createChat({
+			count,
+			getHeight: (i) => getHeightRef.current(i),
+			overscan,
+		});
+	}
+
+	const flow = flowRef.current;
+
+	useEffect(() => {
+		flow.setCount(count);
+		rerender((c) => c + 1);
+	}, [flow, count]);
+
+	const containerRef = useCallback(
+		(el: HTMLElement | null) => {
+			if (cleanupRef.current) {
+				cleanupRef.current();
+				cleanupRef.current = null;
+			}
+
+			containerElRef.current = el;
+
+			if (!el) return;
+
+			const onScroll = () => {
+				if (flow.setViewport(el.scrollTop, el.clientHeight)) {
+					rerender((c) => c + 1);
+				}
+			};
+
+			const observer = new ResizeObserver((entries) => {
+				for (const entry of entries) {
+					flow.setContainerWidth(entry.contentRect.width);
+				}
+				flow.setViewport(el.scrollTop, el.clientHeight);
+				rerender((c) => c + 1);
+			});
+
+			el.addEventListener("scroll", onScroll, { passive: true });
+			observer.observe(el);
+
+			flow.setContainerWidth(el.clientWidth);
+			flow.setViewport(el.scrollTop, el.clientHeight);
+			rerender((c) => c + 1);
+
+			cleanupRef.current = () => {
+				el.removeEventListener("scroll", onScroll);
+				observer.disconnect();
+			};
+		},
+		[flow],
+	);
+
+	useEffect(() => {
+		return () => {
+			if (cleanupRef.current) {
+				cleanupRef.current();
+				cleanupRef.current = null;
+			}
+		};
+	}, []);
+
+	const scrollToIndex = useCallback(
+		(index: number, align?: "start" | "center" | "end") => {
+			const offset = flow.scrollToIndex(index, align);
+			if (containerElRef.current) {
+				containerElRef.current.scrollTop = offset;
+			}
+		},
+		[flow],
+	);
+
+	const scrollToEnd = useCallback(() => {
+		const offset = flow.scrollToEnd();
+		if (containerElRef.current) {
+			containerElRef.current.scrollTop = offset;
+		}
+	}, [flow]);
+
+	const append = useCallback(
+		(appendCount: number) => {
+			flow.append(appendCount);
+			rerender((c) => c + 1);
+		},
+		[flow],
+	);
+
+	const prepend = useCallback(
+		(prependCount: number): ScrollCorrection => {
+			const correction = flow.prepend(prependCount);
+			if (containerElRef.current) {
+				containerElRef.current.scrollTop += correction.offset;
+			}
+			rerender((c) => c + 1);
+			return correction;
+		},
+		[flow],
+	);
+
+	return {
+		containerRef,
+		items: flow.getItems(),
+		totalHeight: flow.totalHeight,
+		scrollToIndex,
+		scrollToEnd,
+		append,
+		prepend,
+	};
+}
