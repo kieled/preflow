@@ -43,7 +43,7 @@ jobs:
               echo "⏭ $name@$local_ver already published, skipping"
             else
               echo "📦 Publishing $name@$local_ver (npm has $npm_ver)"
-              cd "$dir" && npm publish --provenance --access public && cd -
+              cd "$dir" && npm publish --access public && cd -
             fi
           }
 
