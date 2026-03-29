@@ -31,22 +31,25 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Publish @preflow/core
-        run: cd packages/core && npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish changed packages
+        run: |
+          publish_if_needed() {
+            local dir=$1
+            local name=$(node -p "require('./$dir/package.json').name")
+            local local_ver=$(node -p "require('./$dir/package.json').version")
+            local npm_ver=$(npm view "$name" version 2>/dev/null || echo "0.0.0")
 
-      - name: Publish @preflow/prose
-        run: cd packages/prose && npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+            if [ "$local_ver" = "$npm_ver" ]; then
+              echo "⏭ $name@$local_ver already published, skipping"
+            else
+              echo "📦 Publishing $name@$local_ver (npm has $npm_ver)"
+              cd "$dir" && npm publish --provenance --access public && cd -
+            fi
+          }
 
-      - name: Publish @preflow/react
-        run: cd packages/react && npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Publish @preflow/vue
-        run: cd packages/vue && npm publish --provenance --access public
+          publish_if_needed packages/core
+          publish_if_needed packages/prose
+          publish_if_needed packages/react
+          publish_if_needed packages/vue
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
