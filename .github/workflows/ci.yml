@@ -18,8 +18,8 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - run: bun test --recursive
-
       - run: bun run build
+
+      - run: bun test --recursive
 
       - run: bun run lint
