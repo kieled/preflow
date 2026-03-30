@@ -23,6 +23,13 @@ export function createGrid(options: GridOptions): Flow {
 	let rangeStart = 0;
 	let rangeEnd = 0;
 
+	// Items cache
+	let itemsCache: FlowItem[] = [];
+	let cacheStart = -1;
+	let cacheEnd = -1;
+	let dataVer = 0;
+	let cacheVer = -1;
+
 	function build(): void {
 		rowCount = Math.ceil(count / columns);
 		rowHeights = new Float64Array(rowCount);
@@ -38,6 +45,7 @@ export function createGrid(options: GridOptions): Flow {
 		}
 		sums = buildPrefixSums(rowCount, (row) => rowHeights[row]! + (row > 0 ? gap : 0));
 		dirty = false;
+		dataVer++;
 	}
 
 	function ensure(): void {
@@ -87,6 +95,9 @@ export function createGrid(options: GridOptions): Flow {
 
 		getItems(): FlowItem[] {
 			ensure();
+			if (rangeStart === cacheStart && rangeEnd === cacheEnd && dataVer === cacheVer) {
+				return itemsCache;
+			}
 			const items: FlowItem[] = [];
 			for (let row = rangeStart; row < rangeEnd; row++) {
 				const rowY = sums[row]!;
@@ -103,6 +114,10 @@ export function createGrid(options: GridOptions): Flow {
 					});
 				}
 			}
+			itemsCache = items;
+			cacheStart = rangeStart;
+			cacheEnd = rangeEnd;
+			cacheVer = dataVer;
 			return items;
 		},
 

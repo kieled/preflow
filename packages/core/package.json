@@ -1,6 +1,6 @@
 {
 	"name": "@preflow/core",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "Predictive virtualization engine — heights from arithmetic, not DOM measurement",
 	"type": "module",
 	"main": "dist/index.js",

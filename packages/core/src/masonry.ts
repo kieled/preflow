@@ -23,6 +23,13 @@ export function createMasonry(options: MasonryOptions): Flow {
 	let rangeStart = 0;
 	let rangeEnd = 0;
 
+	// Items cache
+	let itemsCache: FlowItem[] = [];
+	let cacheStart = -1;
+	let cacheEnd = -1;
+	let dataVer = 0;
+	let cacheVer = -1;
+
 	function build(): void {
 		const colHeights = new Float64Array(columns);
 		px = new Float64Array(count);
@@ -49,6 +56,7 @@ export function createMasonry(options: MasonryOptions): Flow {
 			if (adjusted > contentHeight) contentHeight = adjusted;
 		}
 		dirty = false;
+		dataVer++;
 	}
 
 	function ensure(): void {
@@ -98,6 +106,9 @@ export function createMasonry(options: MasonryOptions): Flow {
 
 		getItems(): FlowItem[] {
 			ensure();
+			if (rangeStart === cacheStart && rangeEnd === cacheEnd && dataVer === cacheVer) {
+				return itemsCache;
+			}
 			const items: FlowItem[] = [];
 			const viewTop = scrollTop - overscan * 100;
 			const viewBottom = scrollTop + viewportHeight + overscan * 100;
@@ -113,6 +124,10 @@ export function createMasonry(options: MasonryOptions): Flow {
 					});
 				}
 			}
+			itemsCache = items;
+			cacheStart = rangeStart;
+			cacheEnd = rangeEnd;
+			cacheVer = dataVer;
 			return items;
 		},
 

@@ -268,34 +268,52 @@ run(
 	0,
 );
 
-// 12. Memory
+// 12. Memory — subprocess isolation to avoid GC interference
+//    Bun tracks Float64Array in `external`, JS objects in `heapUsed`
 {
-	// Preflow: Float64Array(count+1) = (100001) * 8 bytes = 800 KB
-	// Plus closure overhead ~1 KB
-	const pfMem = (100_001) * 8 + 1024;
+	const pfResult = Bun.spawnSync(["bun", "-e", `
+		const { createFlow } = require('./packages/core/src/index');
+		const h = (i) => 50 + (i % 7) * 10;
+		for (let i = 0; i < 3; i++) { const f = createFlow({ count: 100_000, getHeight: h, overscan: 5 }); f.setViewport(0, 600); }
+		Bun.gc(true); Bun.gc(true);
+		const mem = () => { const m = process.memoryUsage(); return m.heapUsed + m.external; };
+		const b = mem();
+		const k = [];
+		for (let i = 0; i < 5; i++) { const f = createFlow({ count: 100_000, getHeight: h, overscan: 5 }); f.setViewport(0, 600); f.getItems(); k.push(f); }
+		Bun.gc(true); Bun.gc(true);
+		console.log(Math.round((mem() - b) / 5));
+		globalThis.__k = k;
+	`]);
+	const pfMem = parseInt(pfResult.stdout.toString().trim()) || 0;
 
-	// TanStack: array of VirtualItem objects, each ~80-120 bytes
-	// Measure by creating and keeping alive
-	const kept: any[] = [];
-	const m1 = process.memoryUsage().heapUsed;
-	for (let i = 0; i < 5; i++) {
-		const v = createTS(100_000, variableHeight);
-		v._willUpdate();
-		v.getMeasurements();
-		kept.push(v);
-	}
-	const tsMem = (process.memoryUsage().heapUsed - m1) / 5;
-	void kept;
+	const tsResult = Bun.spawnSync(["bun", "-e", `
+		const { Virtualizer } = require('@tanstack/virtual-core');
+		const h = (i) => 50 + (i % 7) * 10;
+		function mk(n) { return new Virtualizer({ count: n, getScrollElement: () => null, estimateSize: h, overscan: 5,
+			scrollToFn: () => {}, observeElementRect: () => {}, observeElementOffset: () => {},
+			initialRect: { width: 800, height: 600 } }); }
+		for (let i = 0; i < 3; i++) { const v = mk(100000); v._willUpdate(); v.getMeasurements(); }
+		Bun.gc(true); Bun.gc(true);
+		const mem = () => { const m = process.memoryUsage(); return m.heapUsed + m.external; };
+		const b = mem();
+		const k = [];
+		for (let i = 0; i < 5; i++) { const v = mk(100000); v._willUpdate(); v.getMeasurements(); k.push(v); }
+		Bun.gc(true); Bun.gc(true);
+		console.log(Math.round((mem() - b) / 5));
+		globalThis.__k = k;
+	`]);
+	const tsMem = parseInt(tsResult.stdout.toString().trim()) || 0;
 
 	const fmtMem = (b: number) => b >= 1_048_576 ? `${(b / 1_048_576).toFixed(1)} MB` : `${(b / 1024).toFixed(0)} KB`;
+	const ratio = tsMem > pfMem ? `**${(tsMem / pfMem).toFixed(1)}x less**` : `${(pfMem / tsMem).toFixed(1)}x more`;
 
 	rows.push({
 		scenario: "Memory per 100K instance",
 		preflow: fmtMem(pfMem),
 		tanstack: fmtMem(tsMem),
-		diff: `**${(tsMem / pfMem).toFixed(1)}x less**`,
+		diff: ratio,
 	});
-	console.log(`  Memory: preflow ${fmtMem(pfMem)} | tanstack ${fmtMem(tsMem)} | ${(tsMem / pfMem).toFixed(1)}x less`);
+	console.log(`  Memory: preflow ${fmtMem(pfMem)} | tanstack ${fmtMem(tsMem)} | ${ratio}`);
 }
 
 // ---------------------------------------------------------------------------

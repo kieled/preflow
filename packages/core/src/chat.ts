@@ -19,9 +19,17 @@ export function createChat(options: ChatOptions): Flow {
 	let rangeEnd = 0;
 	let isAtBottom = true;
 
+	// Items cache
+	let itemsCache: FlowItem[] = [];
+	let cacheStart = -1;
+	let cacheEnd = -1;
+	let dataVer = 0;
+	let cacheVer = -1;
+
 	function build(): void {
 		sums = buildPrefixSums(count, getHeight);
 		dirty = false;
+		dataVer++;
 	}
 
 	function findIndex(offset: number): number {
@@ -69,6 +77,9 @@ export function createChat(options: ChatOptions): Flow {
 
 		getItems(): FlowItem[] {
 			if (dirty) build();
+			if (rangeStart === cacheStart && rangeEnd === cacheEnd && dataVer === cacheVer) {
+				return itemsCache;
+			}
 			const items: FlowItem[] = [];
 			for (let i = rangeStart; i < rangeEnd; i++) {
 				items.push({
@@ -79,6 +90,10 @@ export function createChat(options: ChatOptions): Flow {
 					height: sums[i + 1]! - sums[i]!,
 				});
 			}
+			itemsCache = items;
+			cacheStart = rangeStart;
+			cacheEnd = rangeEnd;
+			cacheVer = dataVer;
 			return items;
 		},
 
@@ -122,6 +137,7 @@ export function createChat(options: ChatOptions): Flow {
 			}
 			count = newCount;
 			dirty = false;
+			dataVer++;
 			if (isAtBottom) scrollTop = scrollBottom();
 			computeRange();
 		},
@@ -131,6 +147,7 @@ export function createChat(options: ChatOptions): Flow {
 			sums = buildPrefixSums(newCount, getHeight);
 			count = newCount;
 			dirty = false;
+			dataVer++;
 
 			const correction = sums[prependCount]!;
 			scrollTop += correction;
@@ -144,6 +161,7 @@ export function createChat(options: ChatOptions): Flow {
 			const newCount = count + appendCount;
 			sums = rebuildPrefixSumsFrom(sums, count, newCount, getHeight);
 			count = newCount;
+			dataVer++;
 			if (isAtBottom) scrollTop = scrollBottom();
 			computeRange();
 		},

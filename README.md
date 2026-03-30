@@ -13,38 +13,42 @@ Predictive virtualization engine -- heights from arithmetic, not DOM measurement
 
 ## Performance
 
+### Core (headless, no React/DOM)
+
 > Benchmarked on Bun 1.3, 100K variable-height items. Source: `benchmarks/core.bench.ts`
+>
+> These benchmarks test the **headless virtualizer cores** in isolation — no React rendering, no DOM updates, no browser paint. They measure raw computation speed, not end-to-end scroll performance. See [Browser](#browser-playwright-vsync-uncapped-100k-items) for real-world rendering benchmarks.
 
 | Scenario | Preflow | TanStack Virtual | |
 |---|---|---|---|
-| **Full pipeline** (create + 100 scrolls + render) | 3.7K ops/s | 316 ops/s | **11.8x faster** |
-| **Append** (100 batches, infinite scroll) | 675 ops/s | 49 ops/s | **13.8x faster** |
-| **Create 100K items** | 2.0M ops/s | 381K ops/s | **5.3x faster** |
-| **Create 10K items** | 1.1M ops/s | 273K ops/s | **4.1x faster** |
-| **getItems** | 3.2M ops/s | 2.3M ops/s | **1.4x faster** |
-| **Memory** per 100K instance | 782 KB | 2.8 MB | **3.7x less** |
-| Viewport scroll (1K updates) | 9.7K ops/s | 4.6K ops/s | **2.1x faster** |
-| scrollToIndex (10K random) | 19.2K ops/s | 28.4K ops/s | 1.5x slower |
-| O(1) offset lookup (100K calls) | 6.8K ops/s | N/A | preflow only |
-| Grid layout (10K, 4 cols) | 1.5M ops/s | N/A | preflow only |
-| Masonry layout (10K, 4 cols) | 2.8M ops/s | N/A | preflow only |
-| Chat prepend + scroll correction | 14.4K ops/s | N/A | preflow only |
+| **Full pipeline** (create + 100 scrolls + render) | 2.6K ops/s | 225 ops/s | **11.2x faster** |
+| **Append** (100 batches, infinite scroll) | 577 ops/s | 30 ops/s | **19.2x faster** |
+| **Memory** per 100K instance | 782 KB | 7.2 MB | **9.5x less** |
+| **Create 100K items** | 1.6M ops/s | 324K ops/s | **5.0x faster** |
+| Viewport scroll (1K updates) | 11.3K ops/s | 2.4K ops/s | **4.6x faster** |
+| getItems (memoized, same range) | 32.1M ops/s | 2.6M ops/s | **12.5x faster** |
+| scrollToIndex (10K random) | 14.1K ops/s | 12.5K ops/s | **1.1x faster** |
 
-Preflow wins **11 of 12** core benchmarks. The sole loss — `scrollToIndex` at 1.5x — is at raw memory access speed (~5ns/lookup) where V8's object property access is marginally faster than typed array indexing. In real-world usage (the "full pipeline" row), Preflow is **11.8x faster** end-to-end.
+> **Note on getItems**: Both libraries memoize results when range is unchanged. This row measures repeated reads at the same scroll position — useful for parent re-renders but not representative of the scroll hot path, where every call follows a range change. The "full pipeline" row is the most realistic core benchmark.
 
 ### Browser (Playwright, vsync uncapped, 100K items)
 
 > Source: `benchmarks/browser.bench.ts`
+>
+> Full React rendering pipeline: scroll events → virtualizer → React reconciliation → DOM updates → browser paint. This is the closest to real-world performance.
 
 | Test | Preflow | TanStack Virtual | react-virtuoso |
 |---|---|---|---|
-| **Scroll FPS** | 1,748 | 1,332 | 58 |
-| **Scroll p95** | 0.9ms | 1.2ms | 17.9ms |
-| **Grid resize FPS** | 627 | 592 | 1,228 |
-| **Grid resize p95** | 2.9ms | 15.6ms | 1.2ms |
-| **Grid resize drops** | 0 | 16 | 0 |
+| **Scroll FPS** | 1,654 | 1,123 | 57 |
+| **Scroll p95** | 1.0ms | 1.5ms | 18.2ms |
+| **Grid resize FPS** | 431 | 351 | 979 |
+| **Grid resize p95** | 4.4ms | 28.7ms | 1.5ms |
+| **Grid resize drops** | 0 | 46 | 0 |
 
-> Virtuoso's grid resize is fast because it uses CSS `flex-wrap` — the browser handles reflow natively with no JS grid calculation. The tradeoff: all items must be the same size (no variable row heights, no masonry). Preflow and TanStack compute layouts in JS to support variable heights and masonry.
+> **Caveats**:
+> - All three libraries exceed 60 FPS for scroll (except Virtuoso). At real vsync rates, the practical difference between Preflow and TanStack is minimal.
+> - FPS varies across machines and system load. Under heavy GC pressure, Preflow's advantage can shrink or invert because it allocates new item objects on each range change while TanStack reuses pre-built measurement objects.
+> - Virtuoso's grid resize is fast because it uses CSS `flex-wrap` — the browser handles reflow natively with no JS grid calculation. The tradeoff: all items must be the same size (no variable row heights, no masonry). Preflow and TanStack compute layouts in JS to support variable heights and masonry.
 
 ### SSR (`renderToString`)
 
@@ -52,37 +56,60 @@ Preflow wins **11 of 12** core benchmarks. The sole loss — `scrollToIndex` at 
 
 | Items | Preflow | TanStack Virtual | react-virtuoso |
 |---|---|---|---|
-| **1K** | 32.9K ops/s | 10.4K ops/s (3.2x slower) | 3.3K ops/s (10x slower) |
-| **10K** | 16.6K ops/s | 2.6K ops/s (6.5x slower) | 2.9K ops/s (5.7x slower) |
+| **1K** | 22.0K ops/s | 5.8K ops/s (3.8x slower) | 1.9K ops/s (11.5x slower) |
+| **10K** | 13.3K ops/s | 1.2K ops/s (10.9x slower) | 1.9K ops/s (7.2x slower) |
+
+## Trade-offs
+
+Preflow is built on a fundamental design choice: **heights come from arithmetic, not DOM measurement**. This makes it fast and portable (SSR, workers, non-browser environments), but it means:
+
+- **You must know item heights upfront.** If content height depends on rendered DOM (images loading, text wrapping, user-resizable elements), you need to calculate or estimate heights yourself. TanStack and Virtuoso measure actual DOM elements automatically.
+- **No dynamic height adjustment.** If an item's actual rendered height differs from `getHeight(i)`, Preflow won't detect or correct this. TanStack's `measureElement` handles this automatically.
+- **Vertical only.** TanStack supports horizontal lists and RTL layouts. Preflow is vertical-only.
+
+**When Preflow is the right choice:** You can predict heights (fixed-height items, text with known font metrics, data-driven layouts), you need SSR/worker support, or you want minimal bundle size.
+
+**When TanStack/Virtuoso is the better choice:** Content heights are unknown until rendered, you need DOM measurement, horizontal scrolling, sticky headers, or table virtualization.
 
 ## Feature Comparison
 
 |  | Preflow | TanStack Virtual | react-virtuoso |
 |---|---|---|---|
 | **Architecture** | | | |
-| DOM-free core | Yes | No | No |
 | Height source | Predictive (arithmetic) | DOM measurement | DOM measurement |
+| DOM-free core | Yes | No | No |
 | SSR / Node.js | Full | Partial | Partial |
 | Framework-agnostic core | Yes | Yes | No |
-| Bundle size (core, gzip) | 2.1 KB | 5.3 KB | 17 KB |
+| Bundle size (core, gzip) | 2.2 KB | 5.4 KB | 17 KB |
 | **Layout Modes** | | | |
 | 1D list | Yes | Yes | Yes |
 | Grid | Yes | Partial (lanes) | Yes |
 | Masonry | Yes | No | No |
 | Chat (bottom-anchored) | Yes | No | Yes |
+| Horizontal list | No | Yes | No |
 | Line-level prose | Yes | No | No |
+| **Measurement** | | | |
+| Pre-calculated heights | Yes | Yes (`estimateSize`) | Yes (`defaultItemHeight`) |
+| DOM element measurement | No | Yes (`measureElement`) | Yes (automatic) |
+| Dynamic height adjustment | No | Yes | Yes |
 | **Scrolling** | | | |
 | Container scroll | Yes | Yes | Yes |
 | Window scroll | Yes | Yes | Yes |
 | Scroll correction (prepend) | Built-in | Manual | Built-in |
 | Auto-follow (chat) | Built-in | No | Built-in |
 | Bidirectional infinite scroll | Built-in | Manual | Built-in |
+| Smooth scroll behavior | No | Yes | Yes |
+| RTL support | No | Yes | No |
+| isScrolling state | No | Yes | Yes |
+| **Features** | | | |
+| Sticky headers / groups | No | Manual | Yes |
+| Table virtualization | No | No | Yes |
 | **Dynamic Data** | | | |
 | Append items | O(k) incremental | O(n) rebuild | O(n) rebuild |
 | Prepend with correction | Built-in | Manual | Built-in |
 | Container resize reflow | `setContainerWidth` | `measureElement` | Automatic |
 | **Data Structures** | | | |
-| Offset lookup | O(1) prefix-sum | O(n) cache walk | O(log n) tree |
+| Offset lookup | O(1) prefix-sum | O(1) array index | O(log n) tree |
 | Scroll-to-index | O(log n) | O(log n) | O(log n) |
 | Internal storage | `Float64Array` | JS objects | JS objects |
 | **Framework Support** | | | |
@@ -99,7 +126,7 @@ Preflow wins **11 of 12** core benchmarks. The sole loss — `scrollToIndex` at 
 
 | Package | Description | Min | Gzip |
 |---|---|---|---|
-| `@preflow/core` | Headless virtualization engine (zero deps) | 6.7 KB | 2.1 KB |
+| `@preflow/core` | Headless virtualization engine (zero deps) | 5.6 KB | 2.2 KB |
 | `@preflow/core/measure` | Arithmetic text measurement (requires `@chenglou/pretext`) | +0.2 KB | +0.1 KB |
 | `@preflow/react` | React 19 hooks + components | 10.6 KB | 2.5 KB |
 | `@preflow/vue` | Vue 3 composables + components | 8.9 KB | 1.5 KB |
