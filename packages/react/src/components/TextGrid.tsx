@@ -10,6 +10,7 @@ export interface TextGridProps {
 	getHeight: (index: number) => number;
 	renderItem: (item: FlowItem) => React.ReactNode;
 	overscan?: number;
+	windowScroll?: boolean;
 	className?: string;
 	style?: React.CSSProperties;
 }
@@ -22,6 +23,7 @@ export function TextGrid({
 	getHeight,
 	renderItem,
 	overscan,
+	windowScroll,
 	className,
 	style,
 }: TextGridProps) {
@@ -32,13 +34,14 @@ export function TextGrid({
 		gap,
 		getHeight,
 		overscan,
+		windowScroll,
 	});
 
 	return (
 		<div
 			ref={containerRef}
 			className={className}
-			style={{ ...style, overflow: "auto", position: "relative" }}
+			style={{ ...style, overflow: windowScroll ? "visible" : "auto", position: "relative" }}
 		>
 			<div style={{ height: totalHeight, position: "relative" }}>
 				{items.map((item) => (

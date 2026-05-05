@@ -9,6 +9,8 @@ export interface UseGridOptions {
 	gap?: number;
 	getHeight: (index: number) => number;
 	overscan?: number;
+	/** Use window scroll instead of container scroll. */
+	windowScroll?: boolean;
 }
 
 export interface UseGridResult {
@@ -20,7 +22,7 @@ export interface UseGridResult {
 }
 
 export function useGrid(options: UseGridOptions): UseGridResult {
-	const { count, columns, columnWidth, gap, getHeight, overscan } = options;
+	const { count, columns, columnWidth, gap, getHeight, overscan, windowScroll } = options;
 	const [, rerender] = useState(0);
 	const flowRef = useRef<ReturnType<typeof createGrid> | null>(null);
 	const containerElRef = useRef<HTMLElement | null>(null);
@@ -66,33 +68,64 @@ export function useGrid(options: UseGridOptions): UseGridResult {
 
 			if (!el) return;
 
-			const onScroll = () => {
-				if (flow.setViewport(el.scrollTop, el.clientHeight)) {
-					rerender((c) => c + 1);
-				}
-			};
+			if (windowScroll) {
+				const onScroll = () => {
+					const rect = el.getBoundingClientRect();
+					const scrollTop = Math.max(0, -rect.top);
+					if (flow.setViewport(scrollTop, window.innerHeight)) {
+						rerender((c) => c + 1);
+					}
+				};
 
-			const observer = new ResizeObserver((entries) => {
-				for (const entry of entries) {
-					flow.setContainerWidth(entry.contentRect.width);
-				}
+				const observer = new ResizeObserver((entries) => {
+					for (const entry of entries) {
+						flow.setContainerWidth(entry.contentRect.width);
+					}
+					onScroll();
+					rerender((c) => c + 1);
+				});
+
+				window.addEventListener("scroll", onScroll, { passive: true });
+				window.addEventListener("resize", onScroll, { passive: true });
+				observer.observe(el);
+
+				flow.setContainerWidth(el.clientWidth);
+				onScroll();
+
+				cleanupRef.current = () => {
+					window.removeEventListener("scroll", onScroll);
+					window.removeEventListener("resize", onScroll);
+					observer.disconnect();
+				};
+			} else {
+				const onScroll = () => {
+					if (flow.setViewport(el.scrollTop, el.clientHeight)) {
+						rerender((c) => c + 1);
+					}
+				};
+
+				const observer = new ResizeObserver((entries) => {
+					for (const entry of entries) {
+						flow.setContainerWidth(entry.contentRect.width);
+					}
+					flow.setViewport(el.scrollTop, el.clientHeight);
+					rerender((c) => c + 1);
+				});
+
+				el.addEventListener("scroll", onScroll, { passive: true });
+				observer.observe(el);
+
+				flow.setContainerWidth(el.clientWidth);
 				flow.setViewport(el.scrollTop, el.clientHeight);
 				rerender((c) => c + 1);
-			});
 
-			el.addEventListener("scroll", onScroll, { passive: true });
-			observer.observe(el);
-
-			flow.setContainerWidth(el.clientWidth);
-			flow.setViewport(el.scrollTop, el.clientHeight);
-			rerender((c) => c + 1);
-
-			cleanupRef.current = () => {
-				el.removeEventListener("scroll", onScroll);
-				observer.disconnect();
-			};
+				cleanupRef.current = () => {
+					el.removeEventListener("scroll", onScroll);
+					observer.disconnect();
+				};
+			}
 		},
-		[flow],
+		[flow, windowScroll],
 	);
 
 	useEffect(() => {
@@ -107,19 +140,31 @@ export function useGrid(options: UseGridOptions): UseGridResult {
 	const scrollToIndex = useCallback(
 		(index: number, align?: "start" | "center" | "end") => {
 			const offset = flow.scrollToIndex(index, align);
-			if (containerElRef.current) {
+			if (windowScroll) {
+				const el = containerElRef.current;
+				if (el) {
+					const elTop = el.getBoundingClientRect().top + window.scrollY;
+					window.scrollTo({ top: elTop + offset, behavior: "auto" });
+				}
+			} else if (containerElRef.current) {
 				containerElRef.current.scrollTop = offset;
 			}
 		},
-		[flow],
+		[flow, windowScroll],
 	);
 
 	const scrollToEnd = useCallback(() => {
 		const offset = flow.scrollToEnd();
-		if (containerElRef.current) {
+		if (windowScroll) {
+			const el = containerElRef.current;
+			if (el) {
+				const elTop = el.getBoundingClientRect().top + window.scrollY;
+				window.scrollTo({ top: elTop + offset, behavior: "auto" });
+			}
+		} else if (containerElRef.current) {
 			containerElRef.current.scrollTop = offset;
 		}
-	}, [flow]);
+	}, [flow, windowScroll]);
 
 	return {
 		containerRef,
