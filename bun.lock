@@ -40,24 +40,18 @@
     },
     "packages/core": {
       "name": "@preflow/core",
-      "version": "0.0.3",
-      "peerDependencies": {
-        "@chenglou/pretext": "^0.0.3",
-      },
-      "optionalPeers": [
-        "@chenglou/pretext",
-      ],
+      "version": "0.0.5",
     },
     "packages/prose": {
       "name": "@preflow/prose",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "dependencies": {
         "@preflow/core": "workspace:*",
       },
     },
     "packages/react": {
       "name": "@preflow/react",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "dependencies": {
         "@preflow/core": "workspace:*",
       },
@@ -72,7 +66,7 @@
     },
     "packages/vue": {
       "name": "@preflow/vue",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "dependencies": {
         "@preflow/core": "workspace:*",
       },

@@ -135,12 +135,11 @@ Preflow is built on a fundamental design choice: **heights come from arithmetic,
 | Package | Description | Min | Gzip |
 |---|---|---|---|
 | `@preflow/core` | Headless virtualization engine (zero deps) | 5.6 KB | 2.2 KB |
-| `@preflow/core/measure` | Arithmetic text measurement (requires `@chenglou/pretext`) | +0.2 KB | +0.1 KB |
 | `@preflow/react` | React 19 hooks + components | 10.6 KB | 2.5 KB |
 | `@preflow/vue` | Vue 3 composables + components | 8.9 KB | 1.5 KB |
 | `@preflow/prose` | Line-level prose virtualization | 3.5 KB | 1.5 KB |
 
-> `@preflow/core` has zero dependencies. The `@preflow/core/measure` entry point provides arithmetic text measurement via [`@chenglou/pretext`](https://github.com/chenglou/pretext) — install it as an optional peer dependency only if you need text height prediction.
+> `@preflow/core` has zero dependencies. The examples use [`@chenglou/pretext`](https://github.com/chenglou/pretext) directly for arithmetic text measurement, but text measurement is not part of the core package.
 
 ## Quick Start
 

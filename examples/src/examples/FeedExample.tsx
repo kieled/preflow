@@ -1,5 +1,5 @@
-import { measureHeight, prepareText } from "@preflow/core/measure";
-import type { PreparedText } from "@preflow/core/measure";
+import { layout as measureHeight, prepare as prepareText } from "@chenglou/pretext";
+import type { PreparedText } from "@chenglou/pretext";
 import { useFlow } from "@preflow/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 

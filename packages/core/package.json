@@ -9,10 +9,6 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
-		},
-		"./measure": {
-			"types": "./dist/measure.d.ts",
-			"import": "./dist/measure.js"
 		}
 	},
 	"files": ["dist"],
@@ -25,13 +21,5 @@
 		"lint": "biome check src tests",
 		"format": "biome format --write src tests"
 	},
-	"license": "MIT",
-	"peerDependencies": {
-		"@chenglou/pretext": "^0.0.3"
-	},
-	"peerDependenciesMeta": {
-		"@chenglou/pretext": {
-			"optional": true
-		}
-	}
+	"license": "MIT"
 }

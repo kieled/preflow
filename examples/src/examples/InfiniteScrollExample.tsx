@@ -1,7 +1,7 @@
+import { layout as measureHeight, prepare as prepareText } from "@chenglou/pretext";
+import type { PreparedText } from "@chenglou/pretext";
 import { createFlow } from "@preflow/core";
 import type { FlowItem } from "@preflow/core";
-import { measureHeight, prepareText } from "@preflow/core/measure";
-import type { PreparedText } from "@preflow/core/measure";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const BODY_FONT = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
