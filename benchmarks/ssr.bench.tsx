@@ -5,11 +5,11 @@
  * for N virtualized items. This tests the full React integration path.
  */
 
+import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useRef } from "react";
 import { renderToString } from "react-dom/server";
-import { useFlow } from "../packages/react/src/index";
 import { Virtuoso } from "react-virtuoso";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useFlow } from "../packages/react/src/index";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -42,7 +42,10 @@ function PreflowList({ count }: { count: number }) {
 		<div ref={containerRef} style={{ height: 600, overflow: "auto" }}>
 			<div style={{ height: totalHeight, position: "relative" }}>
 				{items.map((item) => (
-					<div key={item.index} style={{ position: "absolute", top: item.y, height: item.height, width: "100%" }}>
+					<div
+						key={item.index}
+						style={{ position: "absolute", top: item.y, height: item.height, width: "100%" }}
+					>
 						Item {item.index}
 					</div>
 				))}
@@ -75,7 +78,10 @@ function TanStackList({ count }: { count: number }) {
 		<div ref={parentRef} style={{ height: 600, overflow: "auto" }}>
 			<div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
 				{virtualizer.getVirtualItems().map((item) => (
-					<div key={item.key} style={{ position: "absolute", top: item.start, height: item.size, width: "100%" }}>
+					<div
+						key={item.key}
+						style={{ position: "absolute", top: item.start, height: item.size, width: "100%" }}
+					>
 						Item {item.index}
 					</div>
 				))}
@@ -99,9 +105,15 @@ for (const count of COUNTS) {
 	console.log(`--- ${count.toLocaleString()} items ---`);
 	console.log();
 
-	const preflow = bench(() => { renderToString(<PreflowList count={count} />); }, ITERS);
-	const virtuoso = bench(() => { renderToString(<VirtuosoList count={count} />); }, ITERS);
-	const tanstack = bench(() => { renderToString(<TanStackList count={count} />); }, ITERS);
+	const preflow = bench(() => {
+		renderToString(<PreflowList count={count} />);
+	}, ITERS);
+	const virtuoso = bench(() => {
+		renderToString(<VirtuosoList count={count} />);
+	}, ITERS);
+	const tanstack = bench(() => {
+		renderToString(<TanStackList count={count} />);
+	}, ITERS);
 
 	const preflowHtml = renderToString(<PreflowList count={count} />);
 	const virtuosoHtml = renderToString(<VirtuosoList count={count} />);
@@ -118,7 +130,7 @@ for (const count of COUNTS) {
 	for (const r of results) {
 		const ratio = r.ops === maxOps ? "" : ` (${(maxOps / r.ops).toFixed(1)}x slower)`;
 		console.log(
-			`  ${r.name.padEnd(14)} ${fmtOps(r.ops).padStart(8)} ops/s  ${(r.avgUs).toFixed(0).padStart(7)}µs  HTML: ${(r.html / 1024).toFixed(1)}KB${ratio}`,
+			`  ${r.name.padEnd(14)} ${fmtOps(r.ops).padStart(8)} ops/s  ${r.avgUs.toFixed(0).padStart(7)}µs  HTML: ${(r.html / 1024).toFixed(1)}KB${ratio}`,
 		);
 	}
 	console.log();

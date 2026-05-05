@@ -1,6 +1,6 @@
 import { createFlow } from "@preflow/core";
 import type { FlowItem } from "@preflow/core";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function seededHeight(index: number): number {
 	return 50 + ((index * 6271 + 31337) % 101);
@@ -83,12 +83,12 @@ export function CoreDirectExample() {
 			<div className="example-controls">
 				<h3>Core Direct API</h3>
 				<p>
-					Using @preflow/core directly without React hooks. Manual
-					scroll listeners, manual ResizeObserver, manual state
-					management. Proves the core is framework-agnostic.
+					Using @preflow/core directly without React hooks. Manual scroll listeners, manual
+					ResizeObserver, manual state management. Proves the core is framework-agnostic.
 				</p>
 				<div className="example-actions">
 					<button
+						type="button"
 						onClick={() => {
 							const el = containerRef.current;
 							if (el) el.scrollTop = 0;
@@ -96,8 +96,12 @@ export function CoreDirectExample() {
 					>
 						Top
 					</button>
-					<button onClick={handleScrollToMiddle}>Middle</button>
-					<button onClick={handleScrollToEnd}>End</button>
+					<button type="button" onClick={handleScrollToMiddle}>
+						Middle
+					</button>
+					<button type="button" onClick={handleScrollToEnd}>
+						End
+					</button>
 				</div>
 				<div className="example-stats">
 					<div>
@@ -110,24 +114,19 @@ export function CoreDirectExample() {
 					</div>
 					<div>
 						<span>Total height</span>
-						<span>
-							{Math.round(totalHeight).toLocaleString()}px
-						</span>
+						<span>{Math.round(totalHeight).toLocaleString()}px</span>
 					</div>
 				</div>
 				<div className="code-snippet">
-					<span className="comment">
-						// Framework-agnostic core API
-					</span>
+					<span className="comment">{"// Framework-agnostic core API"}</span>
 					{"\n"}
 					<span className="keyword">import</span>
 					{" { "}
 					<span className="fn">createFlow</span>
 					{" } "}
-					<span className="keyword">from</span>{" "}
-					<span className="string">"@preflow/core"</span>;{"\n\n"}
-					<span className="keyword">const</span> flow ={" "}
-					<span className="fn">createFlow</span>
+					<span className="keyword">from</span> <span className="string">"@preflow/core"</span>
+					{";\n\n"}
+					<span className="keyword">const</span> flow = <span className="fn">createFlow</span>
 					{"({\n"}
 					{"  count: 5000,\n"}
 					{"  "}
@@ -135,27 +134,24 @@ export function CoreDirectExample() {
 					{"\n"}
 					{"  overscan: 5,\n"}
 					{"});\n\n"}
-					<span className="comment">
-						// Manual scroll handling
-					</span>
+					<span className="comment">{"// Manual scroll handling"}</span>
 					{"\n"}
 					el.addEventListener(
 					<span className="string">"scroll"</span>, () {"=> {\n"}
 					{"  "}
 					<span className="keyword">if</span> (flow.
-					<span className="fn">setViewport</span>(
-					{"\n"}
+					<span className="fn">setViewport</span>({"\n"}
 					{"    el.scrollTop,\n"}
 					{"    el.clientHeight\n"}
 					{"  )) {\n"}
 					{"    "}
-					<span className="comment">// range changed, re-render</span>
+					<span className="comment">{"// range changed, re-render"}</span>
 					{"\n"}
 					{"    render(flow."}
 					<span className="fn">getItems</span>());{"\n"}
 					{"  }\n"}
 					{"});\n\n"}
-					<span className="comment">// O(1) scroll operations</span>
+					<span className="comment">{"// O(1) scroll operations"}</span>
 					{"\n"}
 					flow.<span className="fn">scrollToIndex</span>(2500,{" "}
 					<span className="string">"center"</span>);{"\n"}
@@ -178,9 +174,7 @@ export function CoreDirectExample() {
 							}}
 						>
 							<span className="item-index">#{item.index}</span>
-							<span className="item-info">
-								{item.height}px | core API
-							</span>
+							<span className="item-info">{item.height}px | core API</span>
 						</div>
 					))}
 				</div>

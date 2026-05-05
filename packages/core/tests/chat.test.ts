@@ -27,6 +27,20 @@ describe("createChat", () => {
 			expect(chat.getItemOffset(1)).toBe(50);
 			expect(chat.getItemOffset(2)).toBe(110);
 		});
+
+		test("forEachItem visits visible messages", () => {
+			const chat = makeChat([50, 60, 70], 0);
+			chat.setViewport(0, 200);
+			const visited: number[] = [];
+			chat.forEachItem((index, x, y, width, height) => {
+				visited.push(index);
+				expect(x).toBe(0);
+				expect(width).toBe(0);
+				expect(y).toBe(chat.getItemOffset(index));
+				expect(height).toBe(chat.getItemHeight(index));
+			});
+			expect(visited).toEqual(chat.getItems().map((item) => item.index));
+		});
 	});
 
 	describe("scrollToEnd (bottom anchoring)", () => {
@@ -187,6 +201,26 @@ describe("createChat", () => {
 	});
 
 	describe("setContainerWidth", () => {
+		test("skips duplicate same-width relayouts", () => {
+			let heightCalls = 0;
+			const chat = createChat({
+				count: 3,
+				getHeight: () => {
+					heightCalls++;
+					return 50;
+				},
+			});
+
+			expect(chat.totalHeight).toBe(150);
+			expect(heightCalls).toBe(3);
+
+			chat.setContainerWidth(320);
+			expect(heightCalls).toBe(6);
+
+			chat.setContainerWidth(320);
+			expect(heightCalls).toBe(6);
+		});
+
 		test("relayout stays at bottom if was at bottom", () => {
 			let w = 300;
 			const chat = createChat({

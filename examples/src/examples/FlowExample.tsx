@@ -1,5 +1,5 @@
 import { useFlow } from "@preflow/react";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function seededHeight(index: number): number {
 	return 40 + ((index * 7919 + 104729) % 161);
@@ -18,12 +18,11 @@ export function FlowExample() {
 	const scrollRef = useRef<HTMLElement | null>(null);
 	const getHeight = useCallback((i: number) => seededHeight(i), []);
 
-	const { containerRef, items, totalHeight, scrollToIndex, scrollToEnd } =
-		useFlow({
-			count,
-			getHeight,
-			overscan,
-		});
+	const { containerRef, items, totalHeight, scrollToIndex, scrollToEnd } = useFlow({
+		count,
+		getHeight,
+		overscan,
+	});
 
 	const combinedRef = useCallback(
 		(el: HTMLElement | null) => {
@@ -38,8 +37,7 @@ export function FlowExample() {
 		if (!infiniteScroll || loading) return;
 		const el = scrollRef.current;
 		if (!el) return;
-		const nearBottom =
-			el.scrollTop + el.clientHeight >= el.scrollHeight - 300;
+		const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 300;
 		if (nearBottom && count < 100000) {
 			setLoading(true);
 			setTimeout(() => {
@@ -61,9 +59,8 @@ export function FlowExample() {
 			<div className="example-controls">
 				<h3>Flow (1D List)</h3>
 				<p>
-					Variable-height items in a single column. Scroll down to
-					auto-load more items (infinite scroll). Each item has a
-					deterministic random height between 40-200px.
+					Variable-height items in a single column. Scroll down to auto-load more items (infinite
+					scroll). Each item has a deterministic random height between 40-200px.
 				</p>
 				<label>
 					Items:{" "}
@@ -96,32 +93,22 @@ export function FlowExample() {
 					Infinite scroll
 				</label>
 				<div className="example-actions">
-					<button onClick={() => scrollToIndex(0)}>
+					<button type="button" onClick={() => scrollToIndex(0)}>
 						Scroll to Top
 					</button>
-					<button
-						onClick={() =>
-							scrollToIndex(Math.floor(count / 2), "center")
-						}
-					>
+					<button type="button" onClick={() => scrollToIndex(Math.floor(count / 2), "center")}>
 						Scroll to Middle
 					</button>
-					<button onClick={() => scrollToEnd()}>
+					<button type="button" onClick={() => scrollToEnd()}>
 						Scroll to End
 					</button>
 					<button
-						onClick={() =>
-							scrollToIndex(
-								Math.floor(Math.random() * count),
-								"center",
-							)
-						}
+						type="button"
+						onClick={() => scrollToIndex(Math.floor(Math.random() * count), "center")}
 					>
 						Random
 					</button>
-					<button
-						onClick={() => setCount((c) => c + 50)}
-					>
+					<button type="button" onClick={() => setCount((c) => c + 50)}>
 						Load 50 More
 					</button>
 				</div>
@@ -132,26 +119,19 @@ export function FlowExample() {
 					</div>
 					<div>
 						<span>Total height</span>
-						<span>
-							{Math.round(totalHeight).toLocaleString()}px
-						</span>
+						<span>{Math.round(totalHeight).toLocaleString()}px</span>
 					</div>
 					<div>
 						<span>Range</span>
 						<span>
-							{items[0]?.index ?? 0} -{" "}
-							{items[items.length - 1]?.index ?? 0}
+							{items[0]?.index ?? 0} - {items[items.length - 1]?.index ?? 0}
 						</span>
 					</div>
 					<div>
 						<span>Total items</span>
 						<span>{count.toLocaleString()}</span>
 					</div>
-					{loading && (
-						<div style={{ color: "var(--accent)", marginTop: 4 }}>
-							Loading more...
-						</div>
-					)}
+					{loading && <div style={{ color: "var(--accent)", marginTop: 4 }}>Loading more...</div>}
 				</div>
 			</div>
 			<div className="example-viewport" ref={combinedRef}>
@@ -170,9 +150,7 @@ export function FlowExample() {
 							}}
 						>
 							<span className="item-index">#{item.index}</span>
-							<span className="item-info">
-								{item.height}px
-							</span>
+							<span className="item-info">{item.height}px</span>
 						</div>
 					))}
 				</div>

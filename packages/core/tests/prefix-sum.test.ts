@@ -60,8 +60,8 @@ describe("rebuildPrefixSumsFrom", () => {
 		const sums = buildPrefixSums(3, () => 10);
 		const allHeights = [10, 10, 10, 20, 20];
 		const grown = rebuildPrefixSumsFrom(sums, 3, 5, (i) => allHeights[i]!);
-		expect(grown.length).toBe(6);
-		expect(Array.from(grown)).toEqual([0, 10, 20, 30, 50, 70]);
+		expect(grown.length).toBeGreaterThanOrEqual(6);
+		expect(Array.from(grown.subarray(0, 6))).toEqual([0, 10, 20, 30, 50, 70]);
 	});
 
 	test("rebuild from index 0 is equivalent to full rebuild", () => {

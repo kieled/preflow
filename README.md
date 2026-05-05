@@ -18,18 +18,26 @@ Predictive virtualization engine -- heights from arithmetic, not DOM measurement
 > Benchmarked on Bun 1.3, 100K variable-height items. Source: `benchmarks/core.bench.ts`
 >
 > These benchmarks test the **headless virtualizer cores** in isolation — no React rendering, no DOM updates, no browser paint. They measure raw computation speed, not end-to-end scroll performance. See [Browser](#browser-playwright-vsync-uncapped-100k-items) for real-world rendering benchmarks.
+>
+> The core benchmark reports median ops/sec across multiple samples. Use `bun run bench:json` for machine-readable output.
 
 | Scenario | Preflow | TanStack Virtual | |
 |---|---|---|---|
-| **Full pipeline** (create + 100 scrolls + render) | 2.6K ops/s | 225 ops/s | **11.2x faster** |
-| **Append** (100 batches, infinite scroll) | 577 ops/s | 30 ops/s | **19.2x faster** |
+| **Full pipeline** (create + 100 scrolls + render) | 4.0K ops/s | 131 ops/s | **30.4x faster** |
+| **Append** (100 batches, infinite scroll) | 19.7K ops/s | 9 ops/s | **2191.4x faster** |
 | **Memory** per 100K instance | 782 KB | 7.2 MB | **9.5x less** |
-| **Create 100K items** | 1.6M ops/s | 324K ops/s | **5.0x faster** |
-| Viewport scroll (1K updates) | 11.3K ops/s | 2.4K ops/s | **4.6x faster** |
-| getItems (memoized, same range) | 32.1M ops/s | 2.6M ops/s | **12.5x faster** |
-| scrollToIndex (10K random) | 14.1K ops/s | 12.5K ops/s | **1.1x faster** |
+| **Create 100K items** | 1.7M ops/s | 343.6K ops/s | **4.9x faster** |
+| Viewport scroll (1K updates) | 30.9K ops/s | 2.2K ops/s | **14.1x faster** |
+| Scroll pipeline without getItems | 214.8K ops/s | 35.1K ops/s | **6.1x faster** |
+| getItems (memoized, same range) | 121.5M ops/s | 3.6M ops/s | **34.0x faster** |
+| forEachItem (allocation-free) | 29.6M ops/s | N/A | preflow only |
+| scrollToIndex (10K random) | 14.7K ops/s | 12.4K ops/s | **1.2x faster** |
+| Prose setViewport + getLines | 1.1K ops/s | N/A | preflow only |
+| Prose cached getLines | 92.6M ops/s | N/A | preflow only |
 
 > **Note on getItems**: Both libraries memoize results when range is unchanged. This row measures repeated reads at the same scroll position — useful for parent re-renders but not representative of the scroll hot path, where every call follows a range change. The "full pipeline" row is the most realistic core benchmark.
+>
+> Allocation-sensitive renderers can use `forEachItem()` to visit visible item positions without allocating `FlowItem` objects.
 
 ### Browser (Playwright, vsync uncapped, 100K items)
 
@@ -39,11 +47,11 @@ Predictive virtualization engine -- heights from arithmetic, not DOM measurement
 
 | Test | Preflow | TanStack Virtual | react-virtuoso |
 |---|---|---|---|
-| **Scroll FPS** | 1,654 | 1,123 | 57 |
+| **Scroll FPS** | 1,560 | 1,106 | 58 |
 | **Scroll p95** | 1.0ms | 1.5ms | 18.2ms |
-| **Grid resize FPS** | 431 | 351 | 979 |
-| **Grid resize p95** | 4.4ms | 28.7ms | 1.5ms |
-| **Grid resize drops** | 0 | 46 | 0 |
+| **Grid resize FPS** | 467 | 339 | 935 |
+| **Grid resize p95** | 3.7ms | 29.5ms | 1.9ms |
+| **Grid resize drops** | 0 | 45 | 0 |
 
 > **Caveats**:
 > - All three libraries exceed 60 FPS for scroll (except Virtuoso). At real vsync rates, the practical difference between Preflow and TanStack is minimal.
@@ -56,8 +64,8 @@ Predictive virtualization engine -- heights from arithmetic, not DOM measurement
 
 | Items | Preflow | TanStack Virtual | react-virtuoso |
 |---|---|---|---|
-| **1K** | 22.0K ops/s | 5.8K ops/s (3.8x slower) | 1.9K ops/s (11.5x slower) |
-| **10K** | 13.3K ops/s | 1.2K ops/s (10.9x slower) | 1.9K ops/s (7.2x slower) |
+| **1K** | 14.1K ops/s | 4.3K ops/s (3.3x slower) | 1.6K ops/s (8.8x slower) |
+| **10K** | 15.0K ops/s | 1.2K ops/s (12.1x slower) | 1.7K ops/s (8.7x slower) |
 
 ## Trade-offs
 
@@ -259,6 +267,9 @@ interface Flow {
   readonly visibleRange: { start: number; end: number };
 
   getItems(): FlowItem[];
+  forEachItem(
+    visitor: (index: number, x: number, y: number, width: number, height: number) => void
+  ): void;
   getItemOffset(index: number): number;
   getItemHeight(index: number): number;
 
@@ -273,6 +284,8 @@ interface Flow {
   scrollToEnd(): number;
 }
 ```
+
+`getItems()` returns cached item arrays when the visible range has not changed, but creates a new array of `FlowItem` objects after range or layout changes. `forEachItem()` is the allocation-free alternative for renderers that can consume item fields directly.
 
 ## Architecture
 

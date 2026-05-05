@@ -1,5 +1,5 @@
 import { useGrid } from "@preflow/react";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function seededHeight(index: number): number {
 	return 60 + ((index * 4391 + 77731) % 91);
@@ -30,15 +30,14 @@ export function GridExample() {
 
 	const getHeight = useCallback((i: number) => seededHeight(i), []);
 
-	const { containerRef, items, totalHeight, scrollToIndex, scrollToEnd } =
-		useGrid({
-			count,
-			columns,
-			columnWidth,
-			gap,
-			getHeight,
-			overscan,
-		});
+	const { containerRef, items, totalHeight, scrollToIndex, scrollToEnd } = useGrid({
+		count,
+		columns,
+		columnWidth,
+		gap,
+		getHeight,
+		overscan,
+	});
 
 	const combinedRef = useCallback(
 		(el: HTMLElement | null) => {
@@ -67,8 +66,7 @@ export function GridExample() {
 		if (!infiniteScroll || loading) return;
 		const el = scrollRef.current;
 		if (!el) return;
-		const nearBottom =
-			el.scrollTop + el.clientHeight >= el.scrollHeight - 300;
+		const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 300;
 		if (nearBottom && count < 50000) {
 			setLoading(true);
 			setTimeout(() => {
@@ -90,9 +88,8 @@ export function GridExample() {
 			<div className="example-controls">
 				<h3>Grid</h3>
 				<p>
-					Auto-columns grid with a minimum column width. Columns and
-					widths adjust dynamically to fill the container, like CSS{" "}
-					<code>repeat(auto-fill, minmax(...))</code>.
+					Auto-columns grid with a minimum column width. Columns and widths adjust dynamically to
+					fill the container, like CSS <code>repeat(auto-fill, minmax(...))</code>.
 				</p>
 				<label>
 					Items:{" "}
@@ -147,26 +144,22 @@ export function GridExample() {
 					Infinite scroll
 				</label>
 				<div className="example-actions">
-					<button onClick={() => scrollToIndex(0)}>Top</button>
-					<button
-						onClick={() =>
-							scrollToIndex(Math.floor(count / 2), "center")
-						}
-					>
+					<button type="button" onClick={() => scrollToIndex(0)}>
+						Top
+					</button>
+					<button type="button" onClick={() => scrollToIndex(Math.floor(count / 2), "center")}>
 						Middle
 					</button>
-					<button onClick={() => scrollToEnd()}>End</button>
+					<button type="button" onClick={() => scrollToEnd()}>
+						End
+					</button>
 					<button
-						onClick={() =>
-							scrollToIndex(
-								Math.floor(Math.random() * count),
-								"center",
-							)
-						}
+						type="button"
+						onClick={() => scrollToIndex(Math.floor(Math.random() * count), "center")}
 					>
 						Random
 					</button>
-					<button onClick={() => setCount((c) => c + 30)}>
+					<button type="button" onClick={() => setCount((c) => c + 30)}>
 						Load 30 More
 					</button>
 				</div>
@@ -177,9 +170,7 @@ export function GridExample() {
 					</div>
 					<div>
 						<span>Total height</span>
-						<span>
-							{Math.round(totalHeight).toLocaleString()}px
-						</span>
+						<span>{Math.round(totalHeight).toLocaleString()}px</span>
 					</div>
 					<div>
 						<span>Columns</span>
@@ -197,11 +188,7 @@ export function GridExample() {
 						<span>Total items</span>
 						<span>{count.toLocaleString()}</span>
 					</div>
-					{loading && (
-						<div style={{ color: "var(--accent)", marginTop: 4 }}>
-							Loading more...
-						</div>
-					)}
+					{loading && <div style={{ color: "var(--accent)", marginTop: 4 }}>Loading more...</div>}
 				</div>
 			</div>
 			<div className="example-viewport" ref={combinedRef}>

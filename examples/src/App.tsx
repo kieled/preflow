@@ -1,14 +1,14 @@
 import { useState } from "react";
+import { ChatExample } from "./examples/ChatExample";
+import { ComponentsExample } from "./examples/ComponentsExample";
+import { CoreDirectExample } from "./examples/CoreDirectExample";
+import { FeedExample } from "./examples/FeedExample";
 import { FlowExample } from "./examples/FlowExample";
 import { GridExample } from "./examples/GridExample";
-import { MasonryExample } from "./examples/MasonryExample";
-import { ChatExample } from "./examples/ChatExample";
-import { ProseExample } from "./examples/ProseExample";
-import { CoreDirectExample } from "./examples/CoreDirectExample";
-import { ComponentsExample } from "./examples/ComponentsExample";
-import { PerformanceExample } from "./examples/PerformanceExample";
 import { InfiniteScrollExample } from "./examples/InfiniteScrollExample";
-import { FeedExample } from "./examples/FeedExample";
+import { MasonryExample } from "./examples/MasonryExample";
+import { PerformanceExample } from "./examples/PerformanceExample";
+import { ProseExample } from "./examples/ProseExample";
 import "./App.css";
 
 const examples = [
@@ -89,26 +89,21 @@ export function App() {
 					lastSection = ex.section;
 					return (
 						<div key={ex.id}>
-							{showSection && (
-								<div className="section-title">{ex.section}</div>
-							)}
-							<a
-								href="#"
+							{showSection && <div className="section-title">{ex.section}</div>}
+							<button
+								type="button"
 								className={active === ex.id ? "active" : ""}
-								onClick={(e) => {
-									e.preventDefault();
+								onClick={() => {
 									setActive(ex.id);
 								}}
 							>
 								{ex.name}
-							</a>
+							</button>
 						</div>
 					);
 				})}
 			</nav>
-			<main className="main-content">
-				{current && <current.component />}
-			</main>
+			<main className="main-content">{current && <current.component />}</main>
 		</>
 	);
 }

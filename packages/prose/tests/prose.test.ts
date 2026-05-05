@@ -103,6 +103,26 @@ describe("createProse", () => {
 			}
 			expect(lines.length).toBeLessThan(30); // not all 30 lines
 		});
+
+		test("caches lines until visible range changes", () => {
+			const prose = makeProse(Array(50).fill(10), 20, 0, 0);
+			prose.setViewport(0, 200);
+			const first = prose.getLines();
+			const second = prose.getLines();
+			expect(second).toBe(first);
+
+			prose.setViewport(500, 200);
+			expect(prose.getLines()).not.toBe(first);
+		});
+
+		test("handles visible lines across empty blocks", () => {
+			const prose = makeProse([3, 0, 2, 0, 4], 20, 10, 100);
+			prose.setViewport(0, 1000);
+			const lines = prose.getLines();
+
+			expect(lines.map((line) => line.blockIndex)).toEqual([0, 0, 0, 2, 2, 4, 4, 4, 4]);
+			expect(lines.map((line) => line.localLineIndex)).toEqual([0, 1, 2, 0, 1, 0, 1, 2, 3]);
+		});
 	});
 
 	describe("scrollToLine", () => {

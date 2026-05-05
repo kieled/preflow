@@ -12,6 +12,15 @@ export interface FlowItem {
 	height: number;
 }
 
+/** Allocation-free positioned item visitor. */
+export type FlowItemVisitor = (
+	index: number,
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+) => void;
+
 /** Visible range [start, end) — end is exclusive. */
 export interface Range {
 	start: number;
@@ -34,6 +43,9 @@ export interface Flow {
 
 	/** Get positioned items for the current visible range. */
 	getItems(): FlowItem[];
+
+	/** Visit positioned items for the current visible range without allocating FlowItem objects. */
+	forEachItem(visitor: FlowItemVisitor): void;
 
 	/** O(1): get exact pixel offset of item at index. */
 	getItemOffset(index: number): number;

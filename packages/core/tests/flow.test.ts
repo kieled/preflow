@@ -66,6 +66,28 @@ describe("createFlow", () => {
 		});
 	});
 
+	describe("setContainerWidth", () => {
+		test("skips duplicate same-width relayouts", () => {
+			let heightCalls = 0;
+			const flow = createFlow({
+				count: 3,
+				getHeight: () => {
+					heightCalls++;
+					return 50;
+				},
+			});
+
+			expect(flow.totalHeight).toBe(150);
+			expect(heightCalls).toBe(3);
+
+			flow.setContainerWidth(320);
+			expect(heightCalls).toBe(6);
+
+			flow.setContainerWidth(320);
+			expect(heightCalls).toBe(6);
+		});
+	});
+
 	describe("getItems", () => {
 		test("returns positioned items for visible range", () => {
 			const flow = makeFlow(Array(100).fill(50), 0);
@@ -103,6 +125,21 @@ describe("createFlow", () => {
 				expect(item.height).toBe(heights[item.index]!);
 				expectedY += heights[item.index]!;
 			}
+		});
+
+		test("forEachItem visits positioned items without changing getItems cache", () => {
+			const flow = makeFlow(Array(100).fill(50), 0);
+			flow.setViewport(0, 200);
+			const visited: number[] = [];
+			flow.forEachItem((index, x, y, width, height) => {
+				visited.push(index);
+				expect(x).toBe(0);
+				expect(width).toBe(0);
+				expect(y).toBe(index * 50);
+				expect(height).toBe(50);
+			});
+
+			expect(visited).toEqual(flow.getItems().map((item) => item.index));
 		});
 	});
 

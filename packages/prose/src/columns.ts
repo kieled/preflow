@@ -43,10 +43,11 @@ export interface ColumnLayout {
 }
 
 export function createColumnLayout(options: ColumnLayoutOptions): ColumnLayout {
-	const { columns, count, getLineCount, lineHeight, blockGap = 0, minLinesAtBreak = 2 } = options;
+	const { columns, count, getLineCount, lineHeight, blockGap = 0 } = options;
 
 	let blocks: ColumnBlock[] = [];
 	let columnHeights = new Float64Array(columns);
+	let totalHeight = 0;
 
 	function findShortestColumn(): number {
 		let minIdx = 0;
@@ -60,55 +61,29 @@ export function createColumnLayout(options: ColumnLayoutOptions): ColumnLayout {
 		return minIdx;
 	}
 
-	function computeBlockHeight(blockIndex: number): number {
-		const lc = getLineCount(blockIndex);
-		return lc * lineHeight;
-	}
-
 	function buildLayout(): void {
-		blocks = [];
+		blocks = new Array<ColumnBlock>(count);
 		columnHeights = new Float64Array(columns);
+		totalHeight = 0;
+		const columnHasBlocks = new Uint8Array(columns);
 
 		for (let i = 0; i < count; i++) {
 			const col = findShortestColumn();
-			const y = columnHeights[col]!;
+			const y = columnHeights[col]! + (columnHasBlocks[col] ? blockGap : 0);
 			const lc = getLineCount(i);
-			let height = computeBlockHeight(i);
+			const height = lc * lineHeight;
 
-			// Orphan/widow avoidance: if a block has fewer lines than minLinesAtBreak,
-			// we still place it whole. The check matters when splitting would occur,
-			// but since we place whole blocks, we just ensure we don't leave tiny blocks
-			// isolated. For now, we keep blocks intact (no splitting across columns).
-			if (lc > 0 && lc < minLinesAtBreak) {
-				// Keep the block whole -- just ensure it stays together
-				height = lc * lineHeight;
-			}
-
-			blocks.push({
+			blocks[i] = {
 				blockIndex: i,
 				column: col,
 				y,
 				height,
-			});
+			};
 
-			columnHeights[col] = y + height + (i < count - 1 ? blockGap : 0);
-		}
-
-		// Remove trailing blockGap from column heights
-		for (let c = 0; c < columns; c++) {
-			// Check if column has any blocks
-			const hasBlocks = blocks.some((b) => b.column === c);
-			if (hasBlocks && columnHeights[c]! > 0) {
-				// The last block in this column added an extra gap; remove it
-				const lastInCol = blocks.filter((b) => b.column === c).pop();
-				if (lastInCol) {
-					// Only remove gap if there's actually trailing gap
-					const expectedEnd = lastInCol.y + lastInCol.height;
-					if (columnHeights[c]! > expectedEnd) {
-						columnHeights[c] = expectedEnd;
-					}
-				}
-			}
+			const nextHeight = y + height;
+			columnHeights[col] = nextHeight;
+			columnHasBlocks[col] = 1;
+			if (nextHeight > totalHeight) totalHeight = nextHeight;
 		}
 	}
 
@@ -124,11 +99,7 @@ export function createColumnLayout(options: ColumnLayoutOptions): ColumnLayout {
 		},
 
 		get totalHeight(): number {
-			let max = 0;
-			for (let c = 0; c < columns; c++) {
-				if (columnHeights[c]! > max) max = columnHeights[c]!;
-			}
-			return max;
+			return totalHeight;
 		},
 
 		relayout(): void {

@@ -8,24 +8,41 @@
  * Usage: bun run benchmarks/browser.bench.ts
  */
 
-import { chromium, type Page } from "playwright";
-import { createServer } from "vite";
+import path from "node:path";
 import react from "@vitejs/plugin-react";
-import path from "path";
+import { type Page, chromium } from "playwright";
+import { createServer } from "vite";
+
+declare global {
+	interface Window {
+		__preflowBenchResult?: { times: number[] };
+	}
+}
 
 const SCROLL_LIBS = ["preflow", "tanstack", "virtuoso"] as const;
 const GRID_LIBS = ["preflow-grid", "tanstack-grid", "virtuoso-grid"] as const;
 const DURATION_MS = 3000;
 
-type FPSResult = { fps: number; p50: number; p95: number; p99: number; frames: number; dropped: number };
+type FPSResult = {
+	fps: number;
+	p50: number;
+	p95: number;
+	p99: number;
+	frames: number;
+	dropped: number;
+};
 
 async function measureScroll(page: Page): Promise<FPSResult> {
 	await page.evaluate((duration) => {
 		return new Promise<void>((resolve) => {
-			const el = document.getElementById("scroll-container")
-				|| document.querySelector('[data-virtuoso-scroller="true"]')
-				|| document.querySelector("[style*='overflow']");
-			if (!el) { resolve(); return; }
+			const el =
+				document.getElementById("scroll-container") ||
+				document.querySelector('[data-virtuoso-scroller="true"]') ||
+				document.querySelector("[style*='overflow']");
+			if (!el) {
+				resolve();
+				return;
+			}
 			const times: number[] = [];
 			let last = performance.now();
 			let elapsed = 0;
@@ -37,7 +54,10 @@ async function measureScroll(page: Page): Promise<FPSResult> {
 				el!.scrollTop += 20;
 				if (el!.scrollTop >= el!.scrollHeight - el!.clientHeight) el!.scrollTop = 0;
 				if (elapsed < duration) requestAnimationFrame(tick);
-				else { (window as any).__r = { times: times.slice(1) }; resolve(); }
+				else {
+					window.__preflowBenchResult = { times: times.slice(1) };
+					resolve();
+				}
 			}
 			requestAnimationFrame(tick);
 		});
@@ -48,10 +68,14 @@ async function measureScroll(page: Page): Promise<FPSResult> {
 async function measureResize(page: Page): Promise<FPSResult> {
 	await page.evaluate((duration) => {
 		return new Promise<void>((resolve) => {
-			const el = document.getElementById("scroll-container")
-				|| document.querySelector('[data-virtuoso-scroller="true"]')
-				|| document.querySelector("[style*='overflow']");
-			if (!el) { resolve(); return; }
+			const el =
+				document.getElementById("scroll-container") ||
+				document.querySelector('[data-virtuoso-scroller="true"]') ||
+				document.querySelector("[style*='overflow']");
+			if (!el) {
+				resolve();
+				return;
+			}
 			const times: number[] = [];
 			let last = performance.now();
 			let elapsed = 0;
@@ -67,7 +91,11 @@ async function measureResize(page: Page): Promise<FPSResult> {
 				root.style.width = `${w}px`;
 				frame++;
 				if (elapsed < duration) requestAnimationFrame(tick);
-				else { root.style.width = ""; (window as any).__r = { times: times.slice(1) }; resolve(); }
+				else {
+					root.style.width = "";
+					window.__preflowBenchResult = { times: times.slice(1) };
+					resolve();
+				}
 			}
 			requestAnimationFrame(tick);
 		});
@@ -76,7 +104,9 @@ async function measureResize(page: Page): Promise<FPSResult> {
 }
 
 async function extractResult(page: Page): Promise<FPSResult> {
-	const { times } = await page.evaluate(() => (window as any).__r) as { times: number[] };
+	const result = await page.evaluate(() => window.__preflowBenchResult);
+	if (!result) throw new Error("Browser benchmark did not produce frame timings");
+	const { times } = result;
 	times.sort((a, b) => a - b);
 	const n = times.length;
 	const avg = times.reduce((a, b) => a + b, 0) / n;
@@ -90,14 +120,24 @@ async function extractResult(page: Page): Promise<FPSResult> {
 	};
 }
 
-function printTable(title: string, results: Array<{ name: string } & FPSResult & { mountMs: number }>) {
+function printTable(
+	title: string,
+	results: Array<{ name: string } & FPSResult & { mountMs: number }>,
+) {
 	console.log(title);
 	console.log("-".repeat(74));
-	console.log(`  ${"Library".padEnd(18)} ${"FPS".padStart(5)} ${"p50".padStart(8)} ${"p95".padStart(8)} ${"p99".padStart(8)} ${"Drops".padStart(6)} ${"Mount".padStart(7)}`);
+	console.log(
+		`  ${"Library".padEnd(18)} ${"FPS".padStart(5)} ${"p50".padStart(8)} ${"p95".padStart(8)} ${"p99".padStart(8)} ${"Drops".padStart(6)} ${"Mount".padStart(7)}`,
+	);
 	console.log("-".repeat(74));
 	for (const r of results) {
-		if (r.fps === 0) { console.log(`  ${r.name.padEnd(18)} FAILED`); continue; }
-		console.log(`  ${r.name.padEnd(18)} ${String(r.fps).padStart(5)} ${(r.p50.toFixed(1) + "ms").padStart(8)} ${(r.p95.toFixed(1) + "ms").padStart(8)} ${(r.p99.toFixed(1) + "ms").padStart(8)} ${String(r.dropped).padStart(6)} ${(r.mountMs.toFixed(0) + "ms").padStart(7)}`);
+		if (r.fps === 0) {
+			console.log(`  ${r.name.padEnd(18)} FAILED`);
+			continue;
+		}
+		console.log(
+			`  ${r.name.padEnd(18)} ${String(r.fps).padStart(5)} ${(`${r.p50.toFixed(1)}ms`).padStart(8)} ${(`${r.p95.toFixed(1)}ms`).padStart(8)} ${(`${r.p99.toFixed(1)}ms`).padStart(8)} ${String(r.dropped).padStart(6)} ${(`${r.mountMs.toFixed(0)}ms`).padStart(7)}`,
+		);
 	}
 	console.log();
 }
@@ -110,19 +150,39 @@ async function runTest(
 ) {
 	const results: Array<{ name: string } & FPSResult & { mountMs: number }> = [];
 	for (const lib of libs) {
-		const label = lib.replace("-grid", " grid").replace("preflow", "Preflow").replace("tanstack", "TanStack").replace("virtuoso", "Virtuoso");
+		const label = lib
+			.replace("-grid", " grid")
+			.replace("preflow", "Preflow")
+			.replace("tanstack", "TanStack")
+			.replace("virtuoso", "Virtuoso");
 		process.stdout.write(`  ${label}...`);
 		const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 		try {
 			await page.goto(`${baseUrl}?lib=${lib}`, { waitUntil: "networkidle" });
 			await page.waitForTimeout(300);
-			const mountMs = await page.evaluate(() => new Promise<number>((r) => { const s = performance.now(); requestAnimationFrame(() => requestAnimationFrame(() => r(performance.now() - s))); }));
+			const mountMs = await page.evaluate(
+				() =>
+					new Promise<number>((r) => {
+						const s = performance.now();
+						requestAnimationFrame(() => requestAnimationFrame(() => r(performance.now() - s)));
+					}),
+			);
 			const fps = await measure(page);
 			results.push({ name: label, ...fps, mountMs });
 			console.log(` ${fps.fps} FPS (p95: ${fps.p95.toFixed(1)}ms, drops: ${fps.dropped})`);
-		} catch (e: any) {
-			console.log(` FAILED: ${e.message.slice(0, 80)}`);
-			results.push({ name: label, fps: 0, p50: 0, p95: 0, p99: 0, frames: 0, dropped: 0, mountMs: 0 });
+		} catch (e: unknown) {
+			const message = e instanceof Error ? e.message : String(e);
+			console.log(` FAILED: ${message.slice(0, 80)}`);
+			results.push({
+				name: label,
+				fps: 0,
+				p50: 0,
+				p95: 0,
+				p99: 0,
+				frames: 0,
+				dropped: 0,
+				mountMs: 0,
+			});
 		}
 		await page.close();
 	}

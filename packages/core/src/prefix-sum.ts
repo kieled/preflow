@@ -7,8 +7,10 @@
  */
 export function buildPrefixSums(count: number, getHeight: (index: number) => number): Float64Array {
 	const sums = new Float64Array(count + 1);
+	let acc = 0;
 	for (let i = 0; i < count; i++) {
-		sums[i + 1] = sums[i]! + getHeight(i);
+		acc += getHeight(i);
+		sums[i + 1] = acc;
 	}
 	return sums;
 }
@@ -23,15 +25,20 @@ export function rebuildPrefixSumsFrom(
 	getHeight: (index: number) => number,
 ): Float64Array {
 	if (count + 1 > sums.length) {
-		const newSums = new Float64Array(count + 1);
+		const newLength = Math.max(count + 1, Math.max(1, sums.length) * 2);
+		const newSums = new Float64Array(newLength);
 		newSums.set(sums.subarray(0, fromIndex + 1));
+		let acc = newSums[fromIndex]!;
 		for (let i = fromIndex; i < count; i++) {
-			newSums[i + 1] = newSums[i]! + getHeight(i);
+			acc += getHeight(i);
+			newSums[i + 1] = acc;
 		}
 		return newSums;
 	}
+	let acc = sums[fromIndex]!;
 	for (let i = fromIndex; i < count; i++) {
-		sums[i + 1] = sums[i]! + getHeight(i);
+		acc += getHeight(i);
+		sums[i + 1] = acc;
 	}
 	return sums;
 }

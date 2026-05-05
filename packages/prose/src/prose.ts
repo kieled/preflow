@@ -29,6 +29,8 @@ export function createProse(options: ProseOptions): ProseFlow {
 	let scrollTop = 0;
 	let viewportHeight = 0;
 	let visibleRange = { start: 0, end: 0 };
+	let linesCache: LineItem[] = [];
+	let linesCacheValid = false;
 
 	function getBlockHeight(blockIndex: number): number {
 		return getLineCount(blockIndex) * lineHeight;
@@ -36,9 +38,11 @@ export function createProse(options: ProseOptions): ProseFlow {
 
 	function buildBlockPrefixSums(): Float64Array {
 		const sums = new Float64Array(count + 1);
+		let acc = 0;
 		for (let i = 0; i < count; i++) {
 			const gap = i > 0 ? blockGap : 0;
-			sums[i + 1] = sums[i]! + gap + getBlockHeight(i);
+			acc += gap + getBlockHeight(i);
+			sums[i + 1] = acc;
 		}
 		return sums;
 	}
@@ -148,6 +152,7 @@ export function createProse(options: ProseOptions): ProseFlow {
 		cursor.rebuild(count, getLineCount);
 		blockPrefixSums = buildBlockPrefixSums();
 		visibleRange = computeVisibleRange();
+		linesCacheValid = false;
 	}
 
 	const prose: ProseFlow = {
@@ -164,21 +169,45 @@ export function createProse(options: ProseOptions): ProseFlow {
 		},
 
 		getLines(): LineItem[] {
+			if (linesCacheValid) return linesCache;
 			const lines: LineItem[] = [];
-			for (let g = visibleRange.start; g < visibleRange.end; g++) {
-				const pos = cursor.getBlockForLine(g);
-				const blockLines = getLineCount(pos.blockIndex);
-				lines.push({
-					lineIndex: g,
-					blockIndex: pos.blockIndex,
-					localLineIndex: pos.localLineIndex,
-					y: getLineOffset(g),
-					height: lineHeight,
-					isBlockStart: pos.localLineIndex === 0,
-					isBlockEnd: pos.localLineIndex === blockLines - 1,
-				});
+
+			let lineIndex = visibleRange.start;
+			if (lineIndex < visibleRange.end) {
+				const first = cursor.getBlockForLine(lineIndex);
+				let blockIndex = first.blockIndex;
+				let localLineIndex = first.localLineIndex;
+
+				while (lineIndex < visibleRange.end && blockIndex < count) {
+					const blockLines = cursor.getBlockLineCount(blockIndex);
+					if (blockLines === 0 || localLineIndex >= blockLines) {
+						blockIndex++;
+						localLineIndex = 0;
+						continue;
+					}
+
+					const contentStart = blockPrefixSums[blockIndex]! + (blockIndex > 0 ? blockGap : 0);
+					while (lineIndex < visibleRange.end && localLineIndex < blockLines) {
+						lines.push({
+							lineIndex,
+							blockIndex,
+							localLineIndex,
+							y: contentStart + localLineIndex * lineHeight,
+							height: lineHeight,
+							isBlockStart: localLineIndex === 0,
+							isBlockEnd: localLineIndex === blockLines - 1,
+						});
+						lineIndex++;
+						localLineIndex++;
+					}
+					blockIndex++;
+					localLineIndex = 0;
+				}
 			}
-			return lines;
+
+			linesCache = lines;
+			linesCacheValid = true;
+			return linesCache;
 		},
 
 		getLineOffset(globalLineIndex: number): number {
@@ -199,6 +228,7 @@ export function createProse(options: ProseOptions): ProseFlow {
 			const newRange = computeVisibleRange();
 			if (rangesEqual(visibleRange, newRange)) return false;
 			visibleRange = newRange;
+			linesCacheValid = false;
 			return true;
 		},
 

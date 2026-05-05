@@ -198,6 +198,41 @@ describe("createMasonry", () => {
 			}
 		});
 
+		test("setContainerWidth updates item widths and x positions", () => {
+			const masonry = makeMasonry([50, 50, 50], 3, 200, 10);
+			masonry.setViewport(0, 500);
+			masonry.setContainerWidth(630);
+
+			const items = masonry.getItems();
+			expect(items[0]!.width).toBeCloseTo(203.33333333333334);
+			expect(items[0]!.x).toBe(0);
+			expect(items[1]!.x).toBeCloseTo(213.33333333333334);
+			expect(items[2]!.x).toBeCloseTo(426.6666666666667);
+		});
+
+		test("setContainerWidth skips duplicate same-width relayouts", () => {
+			let heightCalls = 0;
+			const masonry = createMasonry({
+				count: 3,
+				columns: 3,
+				columnWidth: 200,
+				gap: 10,
+				getHeight: () => {
+					heightCalls++;
+					return 50;
+				},
+			});
+
+			expect(masonry.totalHeight).toBe(50);
+			expect(heightCalls).toBe(3);
+
+			masonry.setContainerWidth(630);
+			expect(heightCalls).toBe(6);
+
+			masonry.setContainerWidth(630);
+			expect(heightCalls).toBe(6);
+		});
+
 		test("items have individual heights", () => {
 			const masonry = makeMasonry([30, 50, 70], 3, 200, 10);
 			masonry.setViewport(0, 500);
@@ -205,6 +240,37 @@ describe("createMasonry", () => {
 			expect(items[0]!.height).toBe(30);
 			expect(items[1]!.height).toBe(50);
 			expect(items[2]!.height).toBe(70);
+		});
+
+		test("forEachItem visits the same visible masonry items", () => {
+			const masonry = makeMasonry([30, 50, 70, 40, 90], 3, 200, 10, 0);
+			masonry.setViewport(0, 500);
+			const items = masonry.getItems();
+			const visited: number[] = [];
+			masonry.forEachItem((index, x, y, width, height) => {
+				visited.push(index);
+				const item = items.find((entry) => entry.index === index)!;
+				expect(x).toBe(item.x);
+				expect(y).toBe(item.y);
+				expect(width).toBe(item.width);
+				expect(height).toBe(item.height);
+			});
+			expect(visited).toEqual(items.map((item) => item.index));
+		});
+
+		test("duplicate setViewport preserves cached items", () => {
+			const masonry = createMasonry({
+				count: 50,
+				columns: 3,
+				columnWidth: 100,
+				gap: 8,
+				getHeight: (i) => 40 + (i % 5) * 10,
+			});
+			masonry.setViewport(120, 300);
+			const items = masonry.getItems();
+
+			expect(masonry.setViewport(120, 300)).toBe(false);
+			expect(masonry.getItems()).toBe(items);
 		});
 	});
 

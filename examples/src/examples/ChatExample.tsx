@@ -1,6 +1,6 @@
-import { useChat } from "@preflow/react";
-import { prepareText, measureHeight } from "@preflow/core/measure";
+import { measureHeight, prepareText } from "@preflow/core/measure";
 import type { PreparedText } from "@preflow/core/measure";
+import { useChat } from "@preflow/react";
 import { useCallback, useRef, useState } from "react";
 
 const CHAT_FONT = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
@@ -58,26 +58,21 @@ export function ChatExample() {
 	const scrollAreaRef = useRef<HTMLElement | null>(null);
 	const widthRef = useRef(600);
 
-	const getHeight = useCallback(
-		(i: number) => {
-			const msg = messagesRef.current[i];
-			return msg ? msgHeight(msg, widthRef.current) : 60;
-		},
-		[],
-	);
+	const getHeight = useCallback((i: number) => {
+		const msg = messagesRef.current[i];
+		return msg ? msgHeight(msg, widthRef.current) : 60;
+	}, []);
 
-	const { containerRef, items, totalHeight, scrollToEnd, append, prepend } =
-		useChat({
-			count: messageCount,
-			getHeight,
-			overscan: 5,
-		});
+	const { containerRef, items, totalHeight, scrollToEnd, append, prepend } = useChat({
+		count: messageCount,
+		getHeight,
+		overscan: 5,
+	});
 
 	const handleScroll = useCallback(() => {
 		const el = scrollAreaRef.current;
 		if (!el) return;
-		const atBottom =
-			el.scrollTop >= el.scrollHeight - el.clientHeight - 2;
+		const atBottom = el.scrollTop >= el.scrollHeight - el.clientHeight - 2;
 		setIsAtBottom(atBottom);
 	}, []);
 
@@ -91,20 +86,15 @@ export function ChatExample() {
 	);
 
 	const handleSend = useCallback(() => {
-		const text =
-			sampleTexts[Math.floor(Math.random() * sampleTexts.length)]!;
+		const text = sampleTexts[Math.floor(Math.random() * sampleTexts.length)]!;
 		messagesRef.current = [...messagesRef.current, createMessage(text, "me")];
 		setMessageCount(messagesRef.current.length);
 		append(1);
 	}, [append]);
 
 	const handleReceive = useCallback(() => {
-		const text =
-			sampleTexts[Math.floor(Math.random() * sampleTexts.length)]!;
-		messagesRef.current = [
-			...messagesRef.current,
-			createMessage(text, "them"),
-		];
+		const text = sampleTexts[Math.floor(Math.random() * sampleTexts.length)]!;
+		messagesRef.current = [...messagesRef.current, createMessage(text, "them")];
 		setMessageCount(messagesRef.current.length);
 		append(1);
 	}, [append]);
@@ -126,15 +116,20 @@ export function ChatExample() {
 			<div className="example-controls">
 				<h3>Chat</h3>
 				<p>
-					Bottom-anchored messaging with pretext-based height
-					measurement. append (new messages) and prepend (load older)
-					with auto-follow when at bottom.
+					Bottom-anchored messaging with pretext-based height measurement. append (new messages) and
+					prepend (load older) with auto-follow when at bottom.
 				</p>
 				<div className="example-actions">
-					<button onClick={handleSend}>Send Message</button>
-					<button onClick={handleReceive}>Receive Message</button>
-					<button onClick={handleLoadOlder}>Load 20 Older</button>
-					<button onClick={() => scrollToEnd()}>
+					<button type="button" onClick={handleSend}>
+						Send Message
+					</button>
+					<button type="button" onClick={handleReceive}>
+						Receive Message
+					</button>
+					<button type="button" onClick={handleLoadOlder}>
+						Load 20 Older
+					</button>
+					<button type="button" onClick={() => scrollToEnd()}>
 						Jump to Bottom
 					</button>
 				</div>
@@ -149,15 +144,12 @@ export function ChatExample() {
 					</div>
 					<div>
 						<span>Total height</span>
-						<span>
-							{Math.round(totalHeight).toLocaleString()}px
-						</span>
+						<span>{Math.round(totalHeight).toLocaleString()}px</span>
 					</div>
 					<div>
 						<span>Range</span>
 						<span>
-							{items[0]?.index ?? 0} -{" "}
-							{items[items.length - 1]?.index ?? 0}
+							{items[0]?.index ?? 0} - {items[items.length - 1]?.index ?? 0}
 						</span>
 					</div>
 				</div>
@@ -165,20 +157,12 @@ export function ChatExample() {
 					className={`chat-status ${isAtBottom ? "at-bottom" : "scrolled-up"}`}
 					style={{ marginTop: 12 }}
 				>
-					{isAtBottom
-						? "-- At bottom (auto-follow) --"
-						: "-- Scrolled up --"}
+					{isAtBottom ? "-- At bottom (auto-follow) --" : "-- Scrolled up --"}
 				</div>
 			</div>
 			<div className="chat-viewport">
-				<div
-					className="chat-scroll-area"
-					ref={combinedRef}
-					onScroll={handleScroll}
-				>
-					<div
-						style={{ height: totalHeight, position: "relative" }}
-					>
+				<div className="chat-scroll-area" ref={combinedRef} onScroll={handleScroll}>
+					<div style={{ height: totalHeight, position: "relative" }}>
 						{items.map((item) => {
 							const msg = messagesRef.current[item.index];
 							if (!msg) return null;
@@ -196,9 +180,7 @@ export function ChatExample() {
 										padding: "4px 16px",
 									}}
 								>
-									<div
-										className={`chat-message ${msg.sender}`}
-									>
+									<div className={`chat-message ${msg.sender}`}>
 										<div
 											style={{
 												fontSize: 10,

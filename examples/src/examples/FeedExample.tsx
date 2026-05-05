@@ -1,7 +1,7 @@
-import { useFlow } from "@preflow/react";
-import { prepareText, measureHeight } from "@preflow/core/measure";
+import { measureHeight, prepareText } from "@preflow/core/measure";
 import type { PreparedText } from "@preflow/core/measure";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useFlow } from "@preflow/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Post {
 	id: number;
@@ -56,8 +56,24 @@ const tweets = [
 ];
 
 const times = [
-	"2m", "5m", "12m", "23m", "45m", "1h", "2h", "3h", "5h",
-	"8h", "12h", "16h", "1d", "2d", "3d", "5d", "1w", "2w",
+	"2m",
+	"5m",
+	"12m",
+	"23m",
+	"45m",
+	"1h",
+	"2h",
+	"3h",
+	"5h",
+	"8h",
+	"12h",
+	"16h",
+	"1d",
+	"2d",
+	"3d",
+	"5d",
+	"1w",
+	"2w",
 ];
 
 // Text height via @chenglou/pretext — pure arithmetic, no DOM, no canvas.
@@ -85,7 +101,7 @@ function generatePost(id: number): Post {
 		likes: (id * 7919 + 31) % 2000,
 		reposts: (id * 4391 + 17) % 500,
 		replies: (id * 2731 + 7) % 200,
-		views: (id * 13397 + 41) % 50000 + 1000,
+		views: ((id * 13397 + 41) % 50000) + 1000,
 		time: times[id % times.length]!,
 		verified: author.verified,
 	};
@@ -109,29 +125,23 @@ function formatNum(n: number): string {
 const PAGE_SIZE = 25;
 
 export function FeedExample() {
-	const postsRef = useRef<Post[]>(
-		Array.from({ length: PAGE_SIZE * 2 }, (_, i) => generatePost(i)),
-	);
+	const postsRef = useRef<Post[]>(Array.from({ length: PAGE_SIZE * 2 }, (_, i) => generatePost(i)));
 	const [postCount, setPostCount] = useState(postsRef.current.length);
 	const [loading, setLoading] = useState(false);
 	const scrollRef = useRef<HTMLElement | null>(null);
 	// Track container width for accurate height calculation
 	const widthRef = useRef(800);
 
-	const getHeight = useCallback(
-		(i: number) => {
-			const p = postsRef.current[i];
-			return p ? postHeight(p, widthRef.current) : 100;
-		},
-		[],
-	);
+	const getHeight = useCallback((i: number) => {
+		const p = postsRef.current[i];
+		return p ? postHeight(p, widthRef.current) : 100;
+	}, []);
 
-	const { containerRef, items, totalHeight, scrollToIndex, scrollToEnd } =
-		useFlow({
-			count: postCount,
-			getHeight,
-			overscan: 5,
-		});
+	const { containerRef, items, totalHeight, scrollToIndex, scrollToEnd } = useFlow({
+		count: postCount,
+		getHeight,
+		overscan: 5,
+	});
 
 	const combinedRef = useCallback(
 		(el: HTMLElement | null) => {
@@ -160,16 +170,12 @@ export function FeedExample() {
 		if (loading) return;
 		const el = scrollRef.current;
 		if (!el) return;
-		const nearBottom =
-			el.scrollTop + el.clientHeight >= el.scrollHeight - 500;
+		const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 500;
 		if (nearBottom) {
 			setLoading(true);
 			setTimeout(() => {
 				const start = postsRef.current.length;
-				const newPosts = Array.from(
-					{ length: PAGE_SIZE },
-					(_, i) => generatePost(start + i),
-				);
+				const newPosts = Array.from({ length: PAGE_SIZE }, (_, i) => generatePost(start + i));
 				postsRef.current = [...postsRef.current, ...newPosts];
 				setPostCount(postsRef.current.length);
 				setLoading(false);
@@ -189,25 +195,22 @@ export function FeedExample() {
 			<div className="example-controls">
 				<h3>Social Feed</h3>
 				<p>
-					Heights calculated via @chenglou/pretext — pure arithmetic
-					text measurement (~0.0002ms per layout). No DOM, no canvas.
-					prepare() once per text, measureHeight() at any width.
+					Heights calculated via @chenglou/pretext — pure arithmetic text measurement (~0.0002ms per
+					layout). No DOM, no canvas. prepare() once per text, measureHeight() at any width.
 				</p>
 				<div className="example-actions">
-					<button onClick={() => scrollToIndex(0)}>
+					<button type="button" onClick={() => scrollToIndex(0)}>
 						Back to Top
 					</button>
 					<button
-						onClick={() =>
-							scrollToIndex(
-								Math.floor(Math.random() * postCount),
-								"center",
-							)
-						}
+						type="button"
+						onClick={() => scrollToIndex(Math.floor(Math.random() * postCount), "center")}
 					>
 						Random Post
 					</button>
-					<button onClick={() => scrollToEnd()}>Latest</button>
+					<button type="button" onClick={() => scrollToEnd()}>
+						Latest
+					</button>
 				</div>
 				<div className="example-stats">
 					<div>
@@ -220,9 +223,7 @@ export function FeedExample() {
 					</div>
 					<div>
 						<span>Total height</span>
-						<span>
-							{Math.round(totalHeight).toLocaleString()}px
-						</span>
+						<span>{Math.round(totalHeight).toLocaleString()}px</span>
 					</div>
 					<div>
 						<span>Width</span>
@@ -231,8 +232,7 @@ export function FeedExample() {
 					<div>
 						<span>Range</span>
 						<span>
-							{items[0]?.index ?? 0} -{" "}
-							{items[items.length - 1]?.index ?? 0}
+							{items[0]?.index ?? 0} - {items[items.length - 1]?.index ?? 0}
 						</span>
 					</div>
 				</div>
@@ -273,10 +273,7 @@ export function FeedExample() {
 							>
 								<div className="tweet">
 									<div className="tweet-header">
-										<div
-											className="tweet-avatar"
-											style={{ background: post.avatar }}
-										>
+										<div className="tweet-avatar" style={{ background: post.avatar }}>
 											{post.author[0]}
 										</div>
 										<div className="tweet-meta">
@@ -288,20 +285,12 @@ export function FeedExample() {
 													</span>
 												)}
 											</span>
-											<span className="tweet-handle">
-												@{post.handle}
-											</span>
-											<span className="tweet-dot">
-												&middot;
-											</span>
-											<span className="tweet-time">
-												{post.time}
-											</span>
+											<span className="tweet-handle">@{post.handle}</span>
+											<span className="tweet-dot">&middot;</span>
+											<span className="tweet-time">{post.time}</span>
 										</div>
 									</div>
-									<div className="tweet-text">
-										{post.text}
-									</div>
+									<div className="tweet-text">{post.text}</div>
 									{post.hasImage && (
 										<div
 											className="tweet-image"
@@ -310,33 +299,65 @@ export function FeedExample() {
 												background: `linear-gradient(135deg, hsl(${post.imageHue}, 50%, 40%), hsl(${(post.imageHue + 60) % 360}, 60%, 30%))`,
 											}}
 										>
-											<div className="tweet-image-label">
-												{post.imageHeight}px image
-											</div>
+											<div className="tweet-image-label">{post.imageHeight}px image</div>
 										</div>
 									)}
 									<div className="tweet-footer">
 										<span className="tweet-action">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+											<svg
+												aria-hidden="true"
+												width="16"
+												height="16"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="1.5"
+											>
 												<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
 											</svg>
 											{formatNum(post.replies)}
 										</span>
 										<span className="tweet-action">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-												<path d="M17 1l4 4-4 4" /><path d="M3 11V9a4 4 0 014-4h14" />
-												<path d="M7 23l-4-4 4-4" /><path d="M21 13v2a4 4 0 01-4 4H3" />
+											<svg
+												aria-hidden="true"
+												width="16"
+												height="16"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="1.5"
+											>
+												<path d="M17 1l4 4-4 4" />
+												<path d="M3 11V9a4 4 0 014-4h14" />
+												<path d="M7 23l-4-4 4-4" />
+												<path d="M21 13v2a4 4 0 01-4 4H3" />
 											</svg>
 											{formatNum(post.reposts)}
 										</span>
 										<span className="tweet-action">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+											<svg
+												aria-hidden="true"
+												width="16"
+												height="16"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="1.5"
+											>
 												<path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
 											</svg>
 											{formatNum(post.likes)}
 										</span>
 										<span className="tweet-action">
-											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+											<svg
+												aria-hidden="true"
+												width="16"
+												height="16"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="1.5"
+											>
 												<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
 												<circle cx="12" cy="12" r="3" />
 											</svg>

@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
-import { TextList, TextGrid, TextMasonry } from "@preflow/react";
 import type { FlowItem } from "@preflow/core";
+import { TextGrid, TextList, TextMasonry } from "@preflow/react";
+import { useCallback, useState } from "react";
 
 function seededHeight(index: number): number {
 	return 40 + ((index * 7919 + 104729) % 121);
@@ -22,14 +22,8 @@ export function ComponentsExample() {
 	const [count] = useState(3000);
 
 	const listGetHeight = useCallback((i: number) => seededHeight(i), []);
-	const gridGetHeight = useCallback(
-		(i: number) => 60 + ((i * 4391 + 77731) % 61),
-		[],
-	);
-	const masonryGetHeight = useCallback(
-		(i: number) => masonryHeight(i),
-		[],
-	);
+	const gridGetHeight = useCallback((i: number) => 60 + ((i * 4391 + 77731) % 61), []);
+	const masonryGetHeight = useCallback((i: number) => masonryHeight(i), []);
 
 	const renderListItem = useCallback(
 		(item: FlowItem) => (
@@ -46,9 +40,7 @@ export function ComponentsExample() {
 				}}
 			>
 				<span style={{ fontWeight: 600 }}>#{item.index}</span>
-				<span style={{ fontSize: 11, opacity: 0.6 }}>
-					{item.height}px
-				</span>
+				<span style={{ fontSize: 11, opacity: 0.6 }}>{item.height}px</span>
 			</div>
 		),
 		[],
@@ -91,24 +83,26 @@ export function ComponentsExample() {
 			<div className="example-controls">
 				<h3>Components</h3>
 				<p>
-					Pre-built React components that wrap the hooks. Minimal
-					boilerplate -- just provide count, getHeight, and
-					renderItem.
+					Pre-built React components that wrap the hooks. Minimal boilerplate -- just provide count,
+					getHeight, and renderItem.
 				</p>
 				<div className="tab-bar">
 					<button
+						type="button"
 						className={tab === "list" ? "active" : ""}
 						onClick={() => setTab("list")}
 					>
 						TextList
 					</button>
 					<button
+						type="button"
 						className={tab === "grid" ? "active" : ""}
 						onClick={() => setTab("grid")}
 					>
 						TextGrid
 					</button>
 					<button
+						type="button"
 						className={tab === "masonry" ? "active" : ""}
 						onClick={() => setTab("masonry")}
 					>
@@ -122,13 +116,7 @@ export function ComponentsExample() {
 					</div>
 					<div>
 						<span>Component</span>
-						<span>
-							{tab === "list"
-								? "TextList"
-								: tab === "grid"
-									? "TextGrid"
-									: "TextMasonry"}
-						</span>
+						<span>{tab === "list" ? "TextList" : tab === "grid" ? "TextGrid" : "TextMasonry"}</span>
 					</div>
 				</div>
 				<div className="code-snippet">
@@ -174,10 +162,7 @@ export function ComponentsExample() {
 					)}
 				</div>
 			</div>
-			<div
-				className="example-viewport"
-				style={{ overflow: "hidden", display: "flex" }}
-			>
+			<div className="example-viewport" style={{ overflow: "hidden", display: "flex" }}>
 				{tab === "list" && (
 					<TextList
 						count={count}

@@ -1,8 +1,8 @@
 import { createFlow } from "@preflow/core";
 import type { FlowItem } from "@preflow/core";
-import { prepareText, measureHeight } from "@preflow/core/measure";
+import { measureHeight, prepareText } from "@preflow/core/measure";
 import type { PreparedText } from "@preflow/core/measure";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const BODY_FONT = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
 const BODY_LINE_HEIGHT = 20;
@@ -18,12 +18,36 @@ interface FeedItem {
 }
 
 const adjectives = [
-	"Quick", "Lazy", "Happy", "Sad", "Bright", "Dark", "Fast",
-	"Slow", "Big", "Small", "New", "Old", "Hot", "Cold",
+	"Quick",
+	"Lazy",
+	"Happy",
+	"Sad",
+	"Bright",
+	"Dark",
+	"Fast",
+	"Slow",
+	"Big",
+	"Small",
+	"New",
+	"Old",
+	"Hot",
+	"Cold",
 ];
 const nouns = [
-	"fox", "dog", "cat", "bird", "fish", "tree", "river",
-	"mountain", "cloud", "star", "moon", "sun", "wave", "wind",
+	"fox",
+	"dog",
+	"cat",
+	"bird",
+	"fish",
+	"tree",
+	"river",
+	"mountain",
+	"cloud",
+	"star",
+	"moon",
+	"sun",
+	"wave",
+	"wind",
 ];
 const bodies = [
 	"This is a short post.",
@@ -39,8 +63,8 @@ const bodies = [
 ];
 
 function generateItem(id: number): FeedItem {
-	const adj = adjectives[((id * 7) + 3) % adjectives.length]!;
-	const noun = nouns[((id * 13) + 7) % nouns.length]!;
+	const adj = adjectives[(id * 7 + 3) % adjectives.length]!;
+	const noun = nouns[(id * 13 + 7) % nouns.length]!;
 	const body = bodies[id % bodies.length]!;
 	return {
 		id,
@@ -99,7 +123,7 @@ export function InfiniteScrollExample() {
 		}
 		setVisibleItems(flowRef.current.getItems());
 		setTotalHeight(flowRef.current.totalHeight);
-	}, []); // eslint-disable-line
+	}, [items.length]);
 
 	const sync = useCallback(() => {
 		const flow = flowRef.current;
@@ -119,14 +143,12 @@ export function InfiniteScrollExample() {
 		}
 
 		// Load more at bottom
-		const nearBottom =
-			el.scrollTop + el.clientHeight >= el.scrollHeight - 400;
+		const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 400;
 		if (nearBottom && !loading) {
 			setLoading(true);
 			setTimeout(() => {
-				const newItems = Array.from(
-					{ length: PAGE_SIZE },
-					(_, i) => generateItem(newestId + 1 + i),
+				const newItems = Array.from({ length: PAGE_SIZE }, (_, i) =>
+					generateItem(newestId + 1 + i),
 				);
 				itemsRef.current = [...itemsRef.current, ...newItems];
 				setItems(itemsRef.current);
@@ -143,9 +165,8 @@ export function InfiniteScrollExample() {
 			setLoadingOlder(true);
 			setTimeout(() => {
 				const newOldestId = oldestId - PAGE_SIZE;
-				const olderItems = Array.from(
-					{ length: PAGE_SIZE },
-					(_, i) => generateItem(newOldestId + i),
+				const olderItems = Array.from({ length: PAGE_SIZE }, (_, i) =>
+					generateItem(newOldestId + i),
 				);
 				itemsRef.current = [...olderItems, ...itemsRef.current];
 				setItems(itemsRef.current);
@@ -194,9 +215,8 @@ export function InfiniteScrollExample() {
 			<div className="example-controls">
 				<h3>Infinite Feed</h3>
 				<p>
-					Bidirectional infinite scroll using @preflow/core directly.
-					Scroll down to load newer posts, scroll to top to load
-					older ones. Prepend uses scroll correction to maintain
+					Bidirectional infinite scroll using @preflow/core directly. Scroll down to load newer
+					posts, scroll to top to load older ones. Prepend uses scroll correction to maintain
 					position.
 				</p>
 				<div className="example-stats">
@@ -210,9 +230,7 @@ export function InfiniteScrollExample() {
 					</div>
 					<div>
 						<span>Total height</span>
-						<span>
-							{Math.round(totalHeight).toLocaleString()}px
-						</span>
+						<span>{Math.round(totalHeight).toLocaleString()}px</span>
 					</div>
 					<div>
 						<span>ID range</span>
@@ -223,8 +241,7 @@ export function InfiniteScrollExample() {
 					<div>
 						<span>Range</span>
 						<span>
-							{visibleItems[0]?.index ?? 0} -{" "}
-							{visibleItems[visibleItems.length - 1]?.index ?? 0}
+							{visibleItems[0]?.index ?? 0} - {visibleItems[visibleItems.length - 1]?.index ?? 0}
 						</span>
 					</div>
 				</div>
@@ -239,13 +256,12 @@ export function InfiniteScrollExample() {
 							color: "var(--accent)",
 						}}
 					>
-						{loadingOlder
-							? "Loading older posts..."
-							: "Loading newer posts..."}
+						{loadingOlder ? "Loading older posts..." : "Loading newer posts..."}
 					</div>
 				)}
 				<div className="example-actions" style={{ marginTop: 16 }}>
 					<button
+						type="button"
 						onClick={() => {
 							const el = containerRef.current;
 							if (el) el.scrollTop = 0;
@@ -254,6 +270,7 @@ export function InfiniteScrollExample() {
 						Scroll to Top
 					</button>
 					<button
+						type="button"
 						onClick={() => {
 							const flow = flowRef.current;
 							const el = containerRef.current;

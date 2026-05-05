@@ -1,5 +1,5 @@
 import { useMasonry } from "@preflow/react";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function seededHeight(index: number): number {
 	return 80 + ((index * 13397 + 52711) % 271);
@@ -35,15 +35,15 @@ export function MasonryExample() {
 
 	const getHeight = useCallback((i: number) => seededHeight(i), []);
 
-	const { containerRef, items, totalHeight, scrollToIndex, scrollToEnd } =
-		useMasonry({
-			count,
-			columns,
-			columnWidth,
-			gap,
-			getHeight,
-			overscan,
-		});
+	const { containerRef, items, totalHeight, scrollToIndex, scrollToEnd } = useMasonry({
+		count,
+		columns,
+		columnWidth,
+		gap,
+		getHeight,
+		overscan,
+	});
+	const actualColumnWidth = items[0]?.width ?? columnWidth;
 
 	const combinedRef = useCallback(
 		(el: HTMLElement | null) => {
@@ -58,8 +58,7 @@ export function MasonryExample() {
 		if (!infiniteScroll || loading) return;
 		const el = scrollRef.current;
 		if (!el) return;
-		const nearBottom =
-			el.scrollTop + el.clientHeight >= el.scrollHeight - 400;
+		const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 400;
 		if (nearBottom && count < 20000) {
 			setLoading(true);
 			setTimeout(() => {
@@ -81,8 +80,8 @@ export function MasonryExample() {
 			<div className="example-controls">
 				<h3>Masonry</h3>
 				<p>
-					Pinterest-style layout using shortest-column greedy
-					placement. Scroll down to auto-load more cards.
+					Pinterest-style layout using shortest-column greedy placement. Scroll down to auto-load
+					more cards.
 				</p>
 				<label>
 					Items:{" "}
@@ -137,26 +136,22 @@ export function MasonryExample() {
 					Infinite scroll
 				</label>
 				<div className="example-actions">
-					<button onClick={() => scrollToIndex(0)}>Top</button>
-					<button
-						onClick={() =>
-							scrollToIndex(Math.floor(count / 2), "center")
-						}
-					>
+					<button type="button" onClick={() => scrollToIndex(0)}>
+						Top
+					</button>
+					<button type="button" onClick={() => scrollToIndex(Math.floor(count / 2), "center")}>
 						Middle
 					</button>
-					<button onClick={() => scrollToEnd()}>End</button>
+					<button type="button" onClick={() => scrollToEnd()}>
+						End
+					</button>
 					<button
-						onClick={() =>
-							scrollToIndex(
-								Math.floor(Math.random() * count),
-								"center",
-							)
-						}
+						type="button"
+						onClick={() => scrollToIndex(Math.floor(Math.random() * count), "center")}
 					>
 						Random
 					</button>
-					<button onClick={() => setCount((c) => c + 20)}>
+					<button type="button" onClick={() => setCount((c) => c + 20)}>
 						Load 20 More
 					</button>
 				</div>
@@ -167,9 +162,7 @@ export function MasonryExample() {
 					</div>
 					<div>
 						<span>Total height</span>
-						<span>
-							{Math.round(totalHeight).toLocaleString()}px
-						</span>
+						<span>{Math.round(totalHeight).toLocaleString()}px</span>
 					</div>
 					<div>
 						<span>Total items</span>
@@ -177,21 +170,15 @@ export function MasonryExample() {
 					</div>
 					<div>
 						<span>Col width</span>
-						<span>{columnWidth}px</span>
+						<span>{Math.round(actualColumnWidth)}px</span>
 					</div>
-					{loading && (
-						<div style={{ color: "var(--accent)", marginTop: 4 }}>
-							Loading more...
-						</div>
-					)}
+					{loading && <div style={{ color: "var(--accent)", marginTop: 4 }}>Loading more...</div>}
 				</div>
 			</div>
 			<div className="example-viewport" ref={combinedRef}>
 				<div style={{ height: totalHeight, position: "relative" }}>
 					{items.map((item) => {
-						const col = Math.round(
-							item.x / (columnWidth + gap),
-						);
+						const col = Math.round(item.x / (item.width + gap));
 						return (
 							<div
 								key={item.index}
@@ -206,16 +193,12 @@ export function MasonryExample() {
 								<div
 									className="masonry-card"
 									style={{
-										backgroundColor: seededColor(
-											item.index,
-										),
+										backgroundColor: seededColor(item.index),
 										color: "rgba(0,0,0,0.8)",
 									}}
 								>
 									<div>
-										<div className="card-title">
-											Card #{item.index}
-										</div>
+										<div className="card-title">Card #{item.index}</div>
 										<div
 											style={{
 												fontSize: 12,
@@ -224,10 +207,7 @@ export function MasonryExample() {
 												opacity: 0.7,
 											}}
 										>
-											{descriptions[
-												item.index %
-													descriptions.length
-											]}
+											{descriptions[item.index % descriptions.length]}
 										</div>
 									</div>
 									<div className="card-meta">

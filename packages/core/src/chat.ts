@@ -1,5 +1,14 @@
 import { buildPrefixSums, rebuildPrefixSumsFrom } from "./prefix-sum";
-import type { ChatOptions, Flow, FlowItem, Range, ScrollCorrection } from "./types";
+import type {
+	ChatOptions,
+	Flow,
+	FlowItem,
+	FlowItemVisitor,
+	Range,
+	ScrollCorrection,
+} from "./types";
+
+const EMPTY_FLOAT64 = new Float64Array(0);
 
 /**
  * Create a chat (reverse-scroll) virtualizer.
@@ -11,25 +20,23 @@ export function createChat(options: ChatOptions): Flow {
 	const getHeight = options.getHeight;
 	const overscan = options.overscan ?? 5;
 
-	let sums: Float64Array = new Float64Array(0);
+	let sums: Float64Array = EMPTY_FLOAT64;
 	let dirty = true;
 	let scrollTop = 0;
 	let viewportHeight = 0;
 	let rangeStart = 0;
 	let rangeEnd = 0;
 	let isAtBottom = true;
+	let containerWidth = Number.NaN;
 
 	// Items cache
 	let itemsCache: FlowItem[] = [];
-	let cacheStart = -1;
-	let cacheEnd = -1;
-	let dataVer = 0;
-	let cacheVer = -1;
+	let itemsCacheValid = false;
 
 	function build(): void {
 		sums = buildPrefixSums(count, getHeight);
 		dirty = false;
-		dataVer++;
+		itemsCacheValid = false;
 	}
 
 	function findIndex(offset: number): number {
@@ -48,16 +55,28 @@ export function createChat(options: ChatOptions): Flow {
 		return lo;
 	}
 
+	function findIndexForward(offset: number, start: number): number {
+		let i = start;
+		while (i < count - 1 && sums[i + 1]! <= offset) i++;
+		return i;
+	}
+
 	function computeRange(): void {
 		if (count === 0) {
 			rangeStart = 0;
 			rangeEnd = 0;
+			itemsCacheValid = false;
 			return;
 		}
 		const first = findIndex(scrollTop);
-		const last = findIndex(scrollTop + viewportHeight);
-		rangeStart = Math.max(0, first - overscan);
-		rangeEnd = Math.min(count, last + 1 + overscan);
+		const last = findIndexForward(scrollTop + viewportHeight, first);
+		const nextStart = Math.max(0, first - overscan);
+		const nextEnd = Math.min(count, last + 1 + overscan);
+		if (nextStart !== rangeStart || nextEnd !== rangeEnd) {
+			rangeStart = nextStart;
+			rangeEnd = nextEnd;
+			itemsCacheValid = false;
+		}
 	}
 
 	function scrollBottom(): number {
@@ -77,9 +96,7 @@ export function createChat(options: ChatOptions): Flow {
 
 		getItems(): FlowItem[] {
 			if (dirty) build();
-			if (rangeStart === cacheStart && rangeEnd === cacheEnd && dataVer === cacheVer) {
-				return itemsCache;
-			}
+			if (itemsCacheValid) return itemsCache;
 			const items: FlowItem[] = [];
 			for (let i = rangeStart; i < rangeEnd; i++) {
 				items.push({
@@ -91,10 +108,16 @@ export function createChat(options: ChatOptions): Flow {
 				});
 			}
 			itemsCache = items;
-			cacheStart = rangeStart;
-			cacheEnd = rangeEnd;
-			cacheVer = dataVer;
+			itemsCacheValid = true;
 			return items;
+		},
+
+		forEachItem(visitor: FlowItemVisitor): void {
+			if (dirty) build();
+			for (let i = rangeStart; i < rangeEnd; i++) {
+				const y = sums[i]!;
+				visitor(i, 0, y, 0, sums[i + 1]! - y);
+			}
 		},
 
 		getItemOffset(index: number): number {
@@ -108,6 +131,8 @@ export function createChat(options: ChatOptions): Flow {
 		},
 
 		setViewport(newScrollTop: number, newViewportHeight: number): boolean {
+			if (!dirty && newScrollTop === scrollTop && newViewportHeight === viewportHeight)
+				return false;
 			scrollTop = newScrollTop;
 			viewportHeight = newViewportHeight;
 			if (dirty) build();
@@ -121,7 +146,9 @@ export function createChat(options: ChatOptions): Flow {
 			return rangeStart !== oldStart || rangeEnd !== oldEnd;
 		},
 
-		setContainerWidth(_width: number): void {
+		setContainerWidth(width: number): void {
+			if (width === containerWidth) return;
+			containerWidth = width;
 			build();
 			if (isAtBottom) scrollTop = scrollBottom();
 			computeRange();
@@ -137,7 +164,7 @@ export function createChat(options: ChatOptions): Flow {
 			}
 			count = newCount;
 			dirty = false;
-			dataVer++;
+			itemsCacheValid = false;
 			if (isAtBottom) scrollTop = scrollBottom();
 			computeRange();
 		},
@@ -147,7 +174,7 @@ export function createChat(options: ChatOptions): Flow {
 			sums = buildPrefixSums(newCount, getHeight);
 			count = newCount;
 			dirty = false;
-			dataVer++;
+			itemsCacheValid = false;
 
 			const correction = sums[prependCount]!;
 			scrollTop += correction;
@@ -161,16 +188,16 @@ export function createChat(options: ChatOptions): Flow {
 			const newCount = count + appendCount;
 			sums = rebuildPrefixSumsFrom(sums, count, newCount, getHeight);
 			count = newCount;
-			dataVer++;
+			itemsCacheValid = false;
 			if (isAtBottom) scrollTop = scrollBottom();
 			computeRange();
 		},
 
-		scrollToIndex(index: number, align: "start" | "center" | "end" = "start"): number {
+		scrollToIndex(index: number, align?: "start" | "center" | "end"): number {
 			if (dirty) build();
 			const ci = index < 0 ? 0 : index >= count ? count - 1 : index;
 			const offset = sums[ci]!;
-			if (align === "start") return offset;
+			if (align === undefined || align === "start") return offset;
 			const height = sums[ci + 1]! - offset;
 			if (align === "center") return offset - viewportHeight / 2 + height / 2;
 			return offset - viewportHeight + height;

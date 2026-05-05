@@ -1,7 +1,13 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.9.0/schema.json",
 	"files": {
-		"include": ["packages/*/src/**", "packages/*/tests/**"]
+		"include": [
+			"packages/*/src/**",
+			"packages/*/tests/**",
+			"examples/src/**",
+			"benchmarks/**",
+			"scripts/**"
+		]
 	},
 	"organizeImports": { "enabled": true },
 	"formatter": {

@@ -47,22 +47,27 @@ body {
 	margin-bottom: 12px;
 }
 
-.sidebar a {
+.sidebar button {
 	display: block;
+	width: 100%;
 	padding: 10px 20px;
 	color: var(--text-dim);
-	text-decoration: none;
+	text-align: left;
+	background: transparent;
+	border: 0;
 	font-size: 14px;
+	font-family: inherit;
+	cursor: pointer;
 	transition: all 0.15s;
 }
 
-.sidebar a:hover,
-.sidebar a.active {
+.sidebar button:hover,
+.sidebar button.active {
 	color: var(--text);
 	background: var(--surface-2);
 }
 
-.sidebar a.active {
+.sidebar button.active {
 	border-left: 3px solid var(--accent);
 	color: var(--accent);
 }

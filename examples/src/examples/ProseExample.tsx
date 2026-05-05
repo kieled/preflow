@@ -1,6 +1,6 @@
 import { createProse } from "@preflow/prose";
-import type { ProseFlow, LineItem } from "@preflow/prose";
-import { useState, useRef, useCallback, useEffect } from "react";
+import type { LineItem, ProseFlow } from "@preflow/prose";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const loremParagraphs = [
 	"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
@@ -114,15 +114,12 @@ export function ProseExample() {
 
 	// Determine paragraph text for a given block/line
 	function getLineText(line: LineItem): string {
-		const paraText =
-			loremParagraphs[line.blockIndex % loremParagraphs.length]!;
+		const paraText = loremParagraphs[line.blockIndex % loremParagraphs.length]!;
 		if (line.isBlockStart) {
 			return `P${line.blockIndex}: ${paraText}`;
 		}
 		// Subsequent lines: simulate continuation
-		const fragment = paraText.substring(
-			(line.localLineIndex * 47) % paraText.length,
-		);
+		const fragment = paraText.substring((line.localLineIndex * 47) % paraText.length);
 		return fragment || paraText;
 	}
 
@@ -131,10 +128,9 @@ export function ProseExample() {
 			<div className="example-controls">
 				<h3>Prose</h3>
 				<p>
-					Line-level virtualization for long documents. Instead of
-					virtualizing whole blocks, individual lines within
-					paragraphs are virtualized. Uses createProse from
-					@preflow/prose directly.
+					Line-level virtualization for long documents. Instead of virtualizing whole blocks,
+					individual lines within paragraphs are virtualized. Uses createProse from @preflow/prose
+					directly.
 				</p>
 				<label>
 					Line height:{" "}
@@ -173,12 +169,11 @@ export function ProseExample() {
 							min={0}
 							max={totalLines - 1}
 							value={scrollToLineInput}
-							onChange={(e) =>
-								setScrollToLineInput(+e.target.value)
-							}
+							onChange={(e) => setScrollToLineInput(+e.target.value)}
 						/>
 					</label>
 					<button
+						type="button"
 						onClick={handleScrollToLine}
 						style={{
 							padding: "4px 10px",
@@ -194,7 +189,7 @@ export function ProseExample() {
 					</button>
 				</div>
 				<div className="example-actions">
-					<button onClick={handleScrollToEnd}>
+					<button type="button" onClick={handleScrollToEnd}>
 						Scroll to End
 					</button>
 				</div>
@@ -213,24 +208,17 @@ export function ProseExample() {
 					</div>
 					<div>
 						<span>Total height</span>
-						<span>
-							{Math.round(totalHeight).toLocaleString()}px
-						</span>
+						<span>{Math.round(totalHeight).toLocaleString()}px</span>
 					</div>
 					<div>
 						<span>Range</span>
 						<span>
-							{lines[0]?.lineIndex ?? 0} -{" "}
-							{lines[lines.length - 1]?.lineIndex ?? 0}
+							{lines[0]?.lineIndex ?? 0} - {lines[lines.length - 1]?.lineIndex ?? 0}
 						</span>
 					</div>
 				</div>
 			</div>
-			<div
-				className="example-viewport"
-				ref={handleRef}
-				style={{ fontFamily: "Georgia, serif" }}
-			>
+			<div className="example-viewport" ref={handleRef} style={{ fontFamily: "Georgia, serif" }}>
 				<div style={{ height: totalHeight, position: "relative" }}>
 					{lines.map((line) => (
 						<div
@@ -242,14 +230,10 @@ export function ProseExample() {
 								left: 0,
 								right: 0,
 								height: line.height,
-								backgroundColor: line.isBlockStart
-									? "rgba(108, 92, 231, 0.08)"
-									: "transparent",
+								backgroundColor: line.isBlockStart ? "rgba(108, 92, 231, 0.08)" : "transparent",
 							}}
 						>
-							<span className="line-number">
-								{line.lineIndex}
-							</span>
+							<span className="line-number">{line.lineIndex}</span>
 							<span
 								style={{
 									opacity: line.isBlockStart ? 1 : 0.7,

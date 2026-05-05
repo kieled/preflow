@@ -160,6 +160,29 @@ describe("createGrid", () => {
 			grid.setContainerWidth(200);
 			expect(grid.totalHeight).toBe(200);
 		});
+
+		test("setContainerWidth skips duplicate same-width relayouts", () => {
+			let heightCalls = 0;
+			const grid = createGrid({
+				count: 4,
+				columns: 2,
+				columnWidth: 200,
+				gap: 0,
+				getHeight: () => {
+					heightCalls++;
+					return 50;
+				},
+			});
+
+			expect(grid.totalHeight).toBe(100);
+			expect(heightCalls).toBe(4);
+
+			grid.setContainerWidth(400);
+			expect(heightCalls).toBe(8);
+
+			grid.setContainerWidth(400);
+			expect(heightCalls).toBe(8);
+		});
 	});
 
 	describe("item dimensions", () => {
@@ -178,6 +201,21 @@ describe("createGrid", () => {
 			// getItems returns individual item heights, not row height
 			expect(items[0]!.height).toBe(30);
 			expect(items[1]!.height).toBe(50);
+		});
+
+		test("forEachItem visits the same visible grid items", () => {
+			const grid = makeGrid([30, 50, 40, 20], 2, 200, 10);
+			grid.setViewport(0, 200);
+			const visited: number[] = [];
+			grid.forEachItem((index, x, y, width, height) => {
+				visited.push(index);
+				const item = grid.getItems().find((entry) => entry.index === index)!;
+				expect(x).toBe(item.x);
+				expect(y).toBe(item.y);
+				expect(width).toBe(item.width);
+				expect(height).toBe(item.height);
+			});
+			expect(visited).toEqual(grid.getItems().map((item) => item.index));
 		});
 	});
 });

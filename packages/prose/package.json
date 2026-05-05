@@ -1,6 +1,6 @@
 {
 	"name": "@preflow/prose",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Line-level virtualization for prose content",
 	"type": "module",
 	"main": "dist/index.js",
